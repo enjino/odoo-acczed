@@ -3,10 +3,16 @@
 | Field | Value |
 |---|---|
 | **Phase** | E — Arabic and RTL |
-| **Status** | ⏳ not started |
+| **Status** | 🅿️ parked — **subsumed by ACC-F04** (ACC-A07 decision 4, 2026-09-14) |
 | **Depends on** | ACC-E03 |
 | **Estimated** | 1 hr |
 | **Touches** | `acczed-site/app/page.tsx` |
+
+> **Subsumed (2026-09-14).** Decision 4 chose "fix the copy now, install later", which moved ACC-F04
+> ahead of ACC-G03 and detached it from this task. That leaves E06 with no unique work: its "stop
+> making the claim" half is ACC-F04 step 1 (the Arabic row), and its "make it true" half is verified by
+> ACC-E03 itself plus F04's flip-back note. **Do not execute E06** — applying both would edit the same
+> two lines of `page.tsx:97-102,162-167` twice. Kept for history rather than deleted.
 
 ## Goal
 
