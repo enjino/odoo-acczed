@@ -41,7 +41,7 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 | [ACC-A03](A-baseline/ACC-A03-capture-backend-baseline.md) | Capture the backend baseline (home + list screens) | ACC-A01 | 10 min | ✅ |
 | [ACC-A04](A-baseline/ACC-A04-capture-production-baseline.md) | Capture the production baseline (backend.acczed.online) | ACC-A01 | 10 min | ⛔ |
 | [ACC-A05](A-baseline/ACC-A05-capture-language-rtl-baseline.md) | Capture language + RTL baseline | ACC-A01 | 10 min | ✅ |
-| [ACC-A06](A-baseline/ACC-A06-promises-vs-reality-table.md) | Complete the promises-vs-reality table | ACC-A02, ACC-A03, ACC-A04, ACC-A05 | 20 min | ⏳ |
+| [ACC-A06](A-baseline/ACC-A06-promises-vs-reality-table.md) | Complete the promises-vs-reality table | ACC-A02, ACC-A03, ACC-A04, ACC-A05 | 20 min | ✅ |
 | [ACC-A07](A-baseline/ACC-A07-answer-open-questions.md) | Answer the seven open questions | ACC-A06 | 15 min | ⏳ |
 | [ACC-A08](A-baseline/ACC-A08-phase-a-acceptance.md) | Phase A acceptance check | ACC-A01..ACC-A07 | 10 min | ⏳ |
 
@@ -134,16 +134,31 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 
 ## Promises vs reality (audit — see ACC-A06)
 
-| Site claim | Reality | Options | Owning task |
-|---|---|---|---|
-| "44 apps" connected | 41 infrastructure modules; no `account`, `crm` or `sale` | fix the copy / install in stages / label each card | ACC-F04, ACC-G03 |
-| "2 languages, both directions" + Arabic RTL `live` | only `en_US` active, `rtlcss` missing | install rtlcss + activate ar_001 | ACC-E01…ACC-E06 |
-| ZATCA e-invoicing `live` | `l10n_sa_edi` and `account` uninstalled | install, or relabel "in the works" | ACC-G03, ACC-F04 |
-| Saudi chart of accounts `live` | `l10n_sa` uninstalled | same | ACC-G03, ACC-F04 |
-| "Your data, your servers" | true (self-hosted droplet) | none | — |
+| # | Site claim | Badge today | Reality (verified 2026-09-14) | Evidence command → result | Options | Owning task |
+|---|---|---|---|---|---|---|
+| 1 | **44** business apps, one platform | — | 41 modules installed, all platform plumbing. `account`, `crm`, `sale`, `stock` are **all uninstalled** | `P=select count(*) filter (where state='installed') from ir_module_module` → **41** | fix the copy / install in stages / label each card | ACC-F04, ACC-G03 |
+| 2 | **2** languages, both directions | — | 93 languages known, **exactly 1 active** (`en_US`). `ar_001` + `ar_SY` carry `direction='rtl'` but are inactive | `P=select count(*) filter (where active), count(*) from res_lang` → **1, 93** | install rtlcss + activate ar_001 | ACC-E01…ACC-E06 |
+| 3 | Arabic, right to left | **live** | Same fact as #2, plus `rtlcss` is absent so Odoo cannot mirror any stylesheet | `P=…res_lang` → 1, 93 · `which rtlcss` → **MISSING** | same | ACC-E01…ACC-E06 |
+| 4 | ZATCA e-invoicing | **live** | `l10n_sa_edi` and `account` both uninstalled | `P=select name,state from ir_module_module where name in ('account','l10n_sa_edi')` → **both uninstalled** | install, or relabel "in the works" | ACC-G03, ACC-F04 |
+| 5 | Saudi chart of accounts | **live** | `l10n_sa` uninstalled | `P=… where name='l10n_sa'` → **uninstalled** | same | ACC-G03, ACC-F04 |
+| 6 | Saudi payroll rules | in the works | **Correctly not live** — no payroll module exists at all. The one honest badge | `P=select count(*) from ir_module_module where name like '%payroll%'` → **0** | none needed | ACC-G04 |
+| 7 | Your data, your servers | **live** | **True** — self-hosted droplet behind Caddy, `web.base.url` already correct | `ssh odoo-acczed "…select value from ir_config_parameter where key='web.base.url'"` → **https://backend.acczed.online** | none | — (A04) |
+| 8 | **100%** open-source core | — | **True** — LGPLv3 Community fork | `grep -m1 -i "GNU LESSER" LICENSE` → LGPLv3 | none | — |
+| 9 | **0** spreadsheets required | — | Not falsifiable — a marketing statement, not a property of the system | — | none | — |
+| 10 | "Sign in" → backend.acczed.online | — | Link works (HTTP 200) but lands on a stock Odoo login: "Your logo", "Powered by Odoo" | `curl -s -o /dev/null -w "%{http_code}" https://backend.acczed.online/web/login` → **200** | brand it | ACC-D01…ACC-D03 |
+
+`P=` is shorthand for `docker exec odoo-postgres psql -U odoo -d acczed -tAc "…"`. The local `acczed`
+database is the same fork as production; the four claims that fail here also fail there — the deployed
+site at app.acczed.online carries the identical badges (8 `tag-live` spans, checked 2026-09-14).
+
+**Verdict:** of 5 `live` badges, **3 are false** (ZATCA, Arabic RTL, Saudi chart of accounts), 1 is true
+(your-servers), and the one deliberately non-live badge is honest. Of the 4 hero stats, the "44 apps"
+and "2 languages" figures are false, "100% open-source core" is true, and "0 spreadsheets" is
+unfalsifiable. **No claim is unlinked** — each maps to the task that makes it true or changes it.
 
 **Rule:** no copy changes before the thing it promises works on `backend.acczed.online`, and a `live` badge
-requires a recorded verification step (command output + screenshot in `evidence/`).
+requires a recorded verification step (command output + screenshot in `evidence/`). Per this table, rows
+1–5 and 10 are the ones that currently break that rule.
 
 ---
 
