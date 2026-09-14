@@ -3,11 +3,12 @@
 All planning for this product lives in this folder. One file per task, one folder per phase, and the
 identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
-**Session mode:** planning only — no code. Every fact quoted in these tasks was verified from the live
-code and the running database on 2026-09-14, with a `file:line` reference so it can be re-checked.
+**Session mode:** execution. Phase A is being worked; every fact quoted in these tasks was verified from
+the live code and the running database on 2026-09-14, with a `file:line` reference so it can be re-checked.
 
-> ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is still
-> untracked — run `git add docs/plans` if you want the plan to survive that.
+> ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
+> committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
+> `docs/` from here on must be committed too, or it is one re-clone away from gone.
 
 **Status legend:** ⏳ not started · 🚧 in progress · ✅ done · 🅿️ parked · ⛔ blocked
 
@@ -24,9 +25,23 @@ code and the running database on 2026-09-14, with a `file:line` reference so it 
 | **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH |
 | **F** | [F-token-sync/](F-token-sync/) | Single token source + site copy parity — One tokens.json generating both surfaces, and marketing copy audited against reality. | one token change reaches both surfaces, no unsupported live badge |
 | **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented |
+| **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode |
 
 Execution order: A → B → **E** → C → D → F (E before C because an Arabic tour of a theme is cheaper
 than a theme tour twice; F last because it locks what C, D and E produced). G is parked by the user.
+**H** is the first feature track: ACC-H01–H09 build the roles & access console, ACC-H10 applies it to the
+auditor-restricted task tab that started it. H01 → H02 → {H03, H04} → {H05, H06, H07} → H08 → H09 → H10.
+
+**ACC-F04 is pulled out of that chain** (decision 4, 2026-09-14): the site currently ships three false
+`live` badges in public, so the copy fix runs as soon as ACC-A06 is done rather than waiting behind the
+whole theming track. It no longer depends on ACC-E06. Revised order for that one task:
+
+```
+A → B → F04 (soften the false badges) → E → C → D → F (F01–F03, F05, F06) → G
+```
+
+ACC-F04's remaining trigger is decision 4's second half — flipping the badges *back* to `live` — which
+happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 
 ---
 
@@ -39,10 +54,10 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 | [ACC-A01](A-baseline/ACC-A01-start-local-stack.md) | Start the local stack and confirm it serves | — | 5 min | ✅ |
 | [ACC-A02](A-baseline/ACC-A02-capture-login-baseline.md) | Capture the login page baseline (text + screenshot) | ACC-A01 | 10 min | ✅ |
 | [ACC-A03](A-baseline/ACC-A03-capture-backend-baseline.md) | Capture the backend baseline (home + list screens) | ACC-A01 | 10 min | ✅ |
-| [ACC-A04](A-baseline/ACC-A04-capture-production-baseline.md) | Capture the production baseline (backend.acczed.online) | ACC-A01 | 10 min | ⛔ |
+| [ACC-A04](A-baseline/ACC-A04-capture-production-baseline.md) | Capture the production baseline (backend.acczed.online) | ACC-A01 | 10 min | ✅ |
 | [ACC-A05](A-baseline/ACC-A05-capture-language-rtl-baseline.md) | Capture language + RTL baseline | ACC-A01 | 10 min | ✅ |
 | [ACC-A06](A-baseline/ACC-A06-promises-vs-reality-table.md) | Complete the promises-vs-reality table | ACC-A02, ACC-A03, ACC-A04, ACC-A05 | 20 min | ✅ |
-| [ACC-A07](A-baseline/ACC-A07-answer-open-questions.md) | Answer the seven open questions | ACC-A06 | 15 min | ⏳ |
+| [ACC-A07](A-baseline/ACC-A07-answer-open-questions.md) | Answer the seven open questions | ACC-A06 | 15 min | ✅ |
 | [ACC-A08](A-baseline/ACC-A08-phase-a-acceptance.md) | Phase A acceptance check | ACC-A01..ACC-A07 | 10 min | ⏳ |
 
 ### Phase B — Scaffolding (module repo + addons path)
@@ -87,7 +102,7 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 | [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ⏳ |
 | [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ⏳ |
 | [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together | ACC-E03 | 3 hrs | ⏳ |
-| [ACC-E06](E-arabic-rtl/ACC-E06-update-site-arabic-claim.md) | Make the site's Arabic claim true (or stop making it) | ACC-E03 | 1 hr | ⏳ |
+| [ACC-E06](E-arabic-rtl/ACC-E06-update-site-arabic-claim.md) | Make the site's Arabic claim true (or stop making it) — **subsumed by ACC-F04, do not execute** | ACC-E03 | 1 hr | 🅿️ |
 
 ### Phase F — Single token source + site copy parity
 
@@ -96,8 +111,9 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 | [ACC-F01](F-token-sync/ACC-F01-define-tokens-json.md) | Define tokens.json as the single source of truth | ACC-C01 | 1 hr | ⏳ |
 | [ACC-F02](F-token-sync/ACC-F02-token-generator-script.md) | Generate both outputs from tokens.json | ACC-F01 | 3 hrs | ⏳ |
 | [ACC-F03](F-token-sync/ACC-F03-verify-token-propagation.md) | Verify one token change reaches both surfaces | ACC-F02 | 30 min | ⏳ |
-| [ACC-F04](F-token-sync/ACC-F04-reconcile-site-copy.md) | Reconcile the marketing copy with the audited reality | ACC-A06, ACC-E06 | 3 hrs | ⏳ |
+| [ACC-F04](F-token-sync/ACC-F04-reconcile-site-copy.md) | Reconcile the marketing copy with the audited reality (**pulled forward — runs ahead of ACC-G03**) | ACC-A06 | 3 hrs | ⏳ |
 | [ACC-F05](F-token-sync/ACC-F05-verify-signin-parity.md) | Verify sign-in parity between site and backend | ACC-D02 | 1 hr | ⏳ |
+| [ACC-F06](F-token-sync/ACC-F06-bilingual-marketing-site.md) | Build the marketing site bilingual (en + ar) | ACC-F04 | 1–2 days | ⏳ |
 
 ### Phase G — Features backlog (parked by user)
 
@@ -108,6 +124,22 @@ than a theme tour twice; F last because it locks what C, D and E produced). G is
 | [ACC-G03](G-features-backlog/ACC-G03-decide-accounting-foundation.md) | Decide the accounting foundation | ACC-G01 | user decision | ⏳ |
 | [ACC-G04](G-features-backlog/ACC-G04-scope-saudi-payroll-ip.md) | Scope the Saudi payroll module (product IP) | ACC-G03 | user decision | ⏳ |
 | [ACC-G05](G-features-backlog/ACC-G05-define-feature-task-template.md) | Lock the per-feature task template | ACC-G02 | 1 hr | ⏳ |
+
+### Phase H — Roles & access console
+
+| Task | Title | Depends on | Est. | Status |
+|---|---|---|---|---|
+| [ACC-H01](H-roles-access/ACC-H01-fix-the-permission-model.md) | Fix the permission model and scope before building | — | 2 hrs | ⏳ |
+| [ACC-H02](H-roles-access/ACC-H02-module-skeleton.md) | Create the acczed_access module skeleton | ACC-H01 | 2 hrs | ⏳ |
+| [ACC-H03](H-roles-access/ACC-H03-roles-screen.md) | Build the Roles screen (create, edit, archive roles) | ACC-H02 | 1 day | ⏳ |
+| [ACC-H04](H-roles-access/ACC-H04-permission-registry.md) | Add the permission registry (features declare their own points) | ACC-H02 | 1 day | ⏳ |
+| [ACC-H05](H-roles-access/ACC-H05-action-and-menu-access.md) | Action & menu access editor (grant per role, impact preview) | ACC-H03, ACC-H04 | 1–2 days | ⏳ |
+| [ACC-H06](H-roles-access/ACC-H06-data-access-editor.md) | Data access editor (model CRUD matrix + record rules) | ACC-H03, ACC-H04 | 2 days | ⏳ |
+| [ACC-H07](H-roles-access/ACC-H07-assignment-and-effective-permissions.md) | Role assignment + effective-permissions inspector | ACC-H03 | 1 day | ⏳ |
+| [ACC-H08](H-roles-access/ACC-H08-permission-change-log.md) | Audit trail for permission changes | ACC-H03, ACC-H05, ACC-H06 | 1 day | ⏳ |
+| [ACC-H09](H-roles-access/ACC-H09-acceptance-and-escalation-tests.md) | Acceptance & escalation tests | ACC-H05, ACC-H06, ACC-H07 | 1 day | ⏳ |
+| [ACC-H10](H-roles-access/ACC-H10-first-consumer-auditor-tab.md) | First consumer: the auditor-restricted task tab | ACC-H04, ACC-H05 | 1 day | ⏳ |
+
 
 ---
 
@@ -165,11 +197,18 @@ requires a recorded verification step (command output + screenshot in `evidence/
 ## Open questions (answers change the implementation)
 
 1. **Logo:** final SVG, or the text mark ("acczed" + 🌿) used on the site?
+   >> DECISION (2026-09-14): **Text mark** ("acczed" + 🌿), matching the site. No new asset to produce, so ACC-D01/D02 are unblocked immediately; if a final SVG appears later it replaces the text mark in one place.
 2. **Default scheme:** always dark, or dark + follow the system/user preference?
+   >> DECISION (2026-09-14): **Always dark**, with the ACC-C04 systray toggle as the opt-out. ACC-C02 keeps its documented shape — override `ir.http.color_scheme()` (baseline fact #5) outright rather than making it preference-aware. The "follow the system" variant is rejected.
 3. **Print/PDF:** light (proposed) or dark as well?
+   >> DECISION (2026-09-14): **Light.** Screen is dark, paper stays white. Keeps the report templates out of ACC-C03's override list entirely.
 4. **Site copy:** fix it to match reality now, or install `account` + `l10n_sa` first and flip "in the works" to "live"?
+   >> DECISION (2026-09-14): **Fix the copy now, install later.** The three false `live` badges (ZATCA, Arabic RTL, Saudi chart of accounts) move to payroll's existing "in the works" wording and flip back as each capability actually lands. **Consequence: ACC-F04 moves ahead of ACC-G03 and no longer waits on ACC-E06** — see the re-sequenced execution order below.
 5. **Arabic marketing site?** currently `<html lang="en">` (`acczed-site/app/layout.tsx:21`).
+   >> DECISION (2026-09-14): **Yes — build the site bilingual (en + ar).** Added as **ACC-F06**. This is marketing-site scope; it is independent of the product's Arabic *interface* claim, which ACC-E01…E04 own.
 6. **Token source:** adopt `tokens.json` + generator (DRY), or a documented manual copy?
+   >> DECISION (2026-09-14): **`tokens.json` + generator.** ACC-F01–F03 proceed as written. The manual-copy option is rejected: only the generator makes Phase F's gate ("one token change reaches both surfaces") actually verifiable rather than asserted.
 7. **First implementation scope:** C + D locally first, production after approval?
+   >> DECISION (2026-09-14): **Follow the documented order — B → E → C → D, locally, production only after approval.** Phase H starts after D, or in parallel; it shares no files with the theming work.
 
-Answers are recorded in place, under each question, as `>> DECISION (date): …` (task ACC-A07).
+All seven answered (task ACC-A07). Two of them changed the plan: #4 moved ACC-F04 ahead of ACC-G03, and #5 added ACC-F06.
