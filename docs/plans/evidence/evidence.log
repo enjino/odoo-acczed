@@ -1,0 +1,102 @@
+# Evidence log — one line per verification: date | command | short output
+# Convention: docs/plans/CONVENTIONS.md §6
+# ---------------------------------------------------------------------------
+
+2026-09-14 | bash run-odoo.sh status | HTTP: not running / Longpolling: not running  (pre-start)
+2026-09-14 | bash run-odoo.sh start  | HTTP server pid 109289 -> :8069 ; Longpolling pid 109291 -> :8072 ; "Ready after 1s."
+2026-09-14 | kill -0 109289 ; kill -0 109291 | both alive (ps: python odoo-bin -c odoo.conf, python odoo-bin gevent -c odoo.conf)
+2026-09-14 | ss -ltn | LISTEN 127.0.0.1:5433 (postgres, docker odoo-postgres) ; 0.0.0.0:8069 ; 0.0.0.0:8072
+2026-09-14 | curl -s -o /dev/null -w "%{http_code}" http://localhost:8069/web/login | 303  -> Location: /web/database/selector
+2026-09-14 | curl -sL -c cj -b cj "http://localhost:8069/web/login?db=acczed" | HTTP 200 ; <title>Odoo</title>
+2026-09-14 | curl -s http://localhost:8069/web/database/selector | databases listed: acczed, mcp_test
+2026-09-14 | tail -n +1887 logs/odoo.log | grep -cE "ERROR|CRITICAL" | 0  (log grew 1886 -> 2002 lines; 22 pre-existing ERROR lines untouched)
+
+# --- ACC-A01 findings (task text wrong on two points; stack itself is healthy) ---
+2026-09-14 | grep -n "HTTP service (werkzeug) running" logs/odoo.log | matches at lines 117 (2026-08-29), 1292 (2026-09-05), 1899 (this start)
+2026-09-14 | NOTE | run-odoo.sh readiness check greps the whole append-only log, so historical
+                       markers satisfy it: "Ready after Ns." is not evidence the new stack is up.
+                       This start did come up for real (lines 1899-1900 carry the new pids).
+2026-09-14 | NOTE | odoo.conf sets db_name = False and list_db = True, so an unqualified
+                       /web/login cannot resolve a database and 303s to the selector.
+                       Baseline URLs in ACC-A02..A05 must carry ?db=acczed and a cookie jar.
+                       ACC-A01 step 2 predicts HTTP 200 for the unqualified URL — it returns 303.
+
+# --- ACC-A02 login page baseline ---
+2026-09-14 | curl -sL -c cj -b cj "http://localhost:8069/web/login?db=acczed" | grep -o "<title>[^<]*</title>" | <title>Odoo</title>
+2026-09-14 | ... | grep -c "odoo.com" | 1   (the hit is https://www.odoo.com?utm_source=db&utm_medium=auth, the "Powered by Odoo" link)
+2026-09-14 | ... | grep -o 'rel="shortcut icon"[^>]*' | rel="shortcut icon" href="/web/static/img/favicon.ico"
+2026-09-14 | ... | grep -o "Manage Databases" | Manage Databases  (present, as baseline fact #8 predicts)
+2026-09-14 | node /tmp/shot.js "<url>" evidence/before-login.png ".oe_login_form:not(.d-none)" | saved, 1600x1000 PNG, no JS errors
+2026-09-14 | NOTE | screenshot method: google-chrome --headless --screenshot DOES NOT WORK for Odoo.
+                       The login form ships as `.oe_login_form.d-none` (display:none) and is revealed by
+                       the OWL component <owl-component name="web.user_switch">. A headless screenshot
+                       taken on load (even with --virtual-time-budget=15000) captures a blank card.
+                       It must instead wait for `.oe_login_form:not(.d-none)` to be visible — verify in
+                       every screenshot that the expected content is actually rendered, never just that
+                       a PNG appeared. Applies to ACC-A03/A04/A05 and every visual task (CONVENTIONS §7.5).
+2026-09-14 | OBSERVED | before-login.png shows: "Your logo" placeholder; Database field pinned to `acczed`
+                       with a Select button; Email; Password (+ Reset Password); purple "Log in" button;
+                       "Don't have an account?"; "Use a Passkey"; footer "Manage Databases | Powered by Odoo".
+                       Button/accent is purple #71639e — corroborates baseline fact #2 ($o-brand-primary).
+
+# --- ACC-A03 backend baseline (home + list) ---
+2026-09-14 | login as admin on http://localhost:8069/web/login?db=acczed | POST /web/login -> lands on /odoo/discuss
+2026-09-14 | /odoo/apps | title "Apps"; 60 kanban cards; counter "1-54 / 54"
+2026-09-14 | computed style of primary button on /odoo/apps | background rgb(113, 99, 158) = #71639e  (equals $o-community-color, task expectation confirmed)
+2026-09-14 | computed style .o_action_manager / .o_web_client | background rgb(248, 249, 250) = #f8f9fa  (= $o-gray-100 / $o-webclient-background-color)
+2026-09-14 | /odoo/action-base.action_res_users | title "Users"; 2 data rows (Marc Demo/demo/User, Mitchell Admin/admin/Administrator)
+2026-09-14 | screenshot | evidence/before-backend-home.png (1600x1000, full page)
+2026-09-14 | screenshot | evidence/before-backend-list.png (1600x1000, full page)
+2026-09-14 | NOTE | Playwright must use waitUntil:'domcontentloaded', never 'networkidle' — the post-login
+                       webclient holds the bus/longpolling connection open, so networkidle never settles
+                       and the run hangs until timeout. Login itself needs the .oe_login_form:not(.d-none)
+                       gate (see ACC-A02). Local dev credential is admin/admin.
+2026-09-14 | OBSERVED | backend chrome is purple throughout: top navbar, "New" button, "Activate" buttons,
+                       search facet chips are all #71639e; page ground #f8f9fa; list rows white.
+                       Company shown in the navbar is "YourCompany" — corroborates baseline fact #11.
+2026-09-14 | OBSERVED | /odoo/apps lists 54 apps and the cards carry a third state beyond
+                       "Activate"/"Learn More": many show **Upgrade** (enterprise-gated in community).
+                       Relevant to the site's "44 apps" claim — see ACC-A06 / ACC-F04.
+
+# --- ACC-A05 language + RTL baseline ---
+2026-09-14 | docker exec odoo-postgres psql -U odoo -d acczed -tAc "select code,direction,active from res_lang where active or code like 'ar%';" | ar_001|rtl| ; ar_SY|rtl| ; en_US|ltr|t
+2026-09-14 | ... explicit coalesce | ar_001|rtl|NULL|f ; ar_SY|rtl|NULL|f ; en_US|ltr|true|t
+2026-09-14 | ... "select count(*) total, count(*) filter (where active) active_count from res_lang;" | 93 | 1
+2026-09-14 | which rtlcss | rtlcss: MISSING   (`npm ls -g --depth=0` -> claude-code, pi-coding-agent, opencode-ai, vercel, wasm-pack; no rtlcss)
+2026-09-14 | ... users' language | __system__/en_US, admin/en_US, public/en_US, portaltemplate/en_US, demo/en_US, portal/en_US
+2026-09-14 | OBSERVED | Phase E's premise is confirmed as fact, not assumption: the site's
+                       "Arabic, right to left — live" badge is false. ar_001 and ar_SY carry
+                       direction='rtl' but are NOT active, and rtlcss is absent so Odoo cannot
+                       mirror any stylesheet (assetsbundle.run_rtlcss shells out to that binary).
+2026-09-14 | NOTE | `res_lang.active` is a NULLABLE boolean and the Arabic rows hold **NULL**, not false.
+                       Odoo's ORM reads NULL as "not active" (`active_test` matches active=true), so the
+                       app behaves correctly — but a raw SQL check written as `where active = false`
+                       or `where not active` will MISS these rows, because NULL fails both comparisons.
+                       ACC-E02 (activating ar_001) and its verification must use `coalesce(active,false)`
+                       or `active is true`, never `= false`. 93 languages exist; exactly 1 is active.
+
+# --- ACC-A04 production baseline (PARTIAL — steps 1-2 done, step 3 blocked) ---
+2026-09-14 | curl -s -o /dev/null -w "%{http_code}" https://backend.acczed.online/web/login | 200
+2026-09-14 | curl -sL https://backend.acczed.online/web/login | grep -o "<title>..." | <title>Odoo</title>
+2026-09-14 | curl -sD - https://backend.acczed.online/web/login | HTTP/2 200 ; server: Werkzeug/3.0.1 Python/3.12.3 ; via: 1.1 Caddy ; alt-svc h3 ; CSP frame-ancestors 'self'
+2026-09-14 | screenshot | evidence/before-login-prod.png (1600x1000, full page)
+2026-09-14 | OBSERVED | production login page differs from local in two ways that matter for ACC-D02:
+                       (a) it shows **no Database field** — production has a database configured, so the
+                       unqualified /web/login returns 200 directly instead of 303-ing to the selector;
+                       (b) it shows **no "Manage Databases" link**, i.e. list_db is off in production.
+                       So D02's gate "no Manage Databases on the login page" is ALREADY TRUE in
+                       production and only false locally. Still present in both: "Your logo" placeholder,
+                       "Powered by Odoo" -> odoo.com, purple #71639e accent, "Use a Passkey".
+2026-09-14 | BLOCKED | A04 step 3 (web.base.url + res_company.name on the droplet) NOT RUN.
+                       `ssh odoo-acczed 'docker exec odoo-postgres psql ...'` was refused by the
+                       permission layer: reading the live production database needs explicit user
+                       consent. Unblocks when the user approves production DB reads (or runs the two
+                       queries themselves — they are read-only SELECTs, quoted in the task file).
+2026-09-14 | RESOLVED | user approved the production read; queries run and A04 unblocked.
+2026-09-14 | ssh odoo-acczed 'docker exec odoo-postgres psql -U odoo -d acczed -tAc "select value from ir_config_parameter where key='"'"'web.base.url'"'"';"' | https://backend.acczed.online
+2026-09-14 | ssh odoo-acczed '... -tAc "select id, name from res_company;"' | 1|YourCompany
+2026-09-14 | OBSERVED | production `web.base.url` already equals the site's target
+                       (https://backend.acczed.online) — ACC-D03's base-URL half is a no-op in
+                       production; only the local instance differs. But production `res_company.name`
+                       is still **YourCompany**, the same stock value as local, so ACC-D03's rename
+                       is genuinely outstanding in BOTH environments.
