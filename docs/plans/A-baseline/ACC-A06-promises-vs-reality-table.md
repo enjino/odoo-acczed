@@ -80,5 +80,22 @@ stats, 5 "Saudi difference" cards, and the Sign-in link. Audited against the liv
   changes before the thing works; that means rows 1–5 are *installation* decisions (ACC-G03) before
   they are copy decisions (ACC-F04), not the reverse.
 
+## Correction (2026-09-14, found during ACC-F04)
+
+**This audit was incomplete and its "done" status was premature.** It enumerated every *badged and
+numeric* claim — 4 hero stats, 5 SAUDI cards, the Sign-in link — and concluded "no claim is unlinked".
+It did not audit the page's **prose**, where three further assertions were false in the present tense:
+
+- the hero lede (`page.tsx:154-156`), the most prominent copy on the page, asserting ZATCA, payroll and
+  right-to-left Arabic as existing;
+- "Arabic and English, RTL and LTR, side by side." (`:203`);
+- "Every app your business needs. Already connected." (`:213`) — still unchanged.
+
+Read the table below as **"every badge and stat"**, not "every public claim". ACC-F04 fixed the first
+two along with the badges; the third is flagged there as needing a human call.
+
+**Lesson for any future audit task:** audit the *rendered page*, not the data structures. The claims
+that survive longest are the ones not modelled as a flag.
+
 ---
 ← Phase A index: [../README.md](../README.md)
