@@ -16,16 +16,16 @@ the live code and the running database on 2026-09-14, with a `file:line` referen
 
 ## Phases
 
-| Phase | Folder | Purpose | Gate (phase is done when) |
-|---|---|---|---|
-| **A** | [A-baseline/](A-baseline/) | Baseline (evidence only, no code) — Freeze today's reality with reproducible evidence, including production and the language/RTL facts. | 4 screenshots + evidence.log, and no source file modified in either repo |
-| **B** | [B-scaffolding/](B-scaffolding/) | Scaffolding (module repo + addons path) — A separate acczed-addons repo, a third addons path, and an empty module that installs green. | acczed_theme shows installed in SQL, with zero visual change |
-| **C** | [C-dark-theme/](C-dark-theme/) | Dark Space Botanical backend theme — Repaint the backend from one variable layer, make dark the default, cover what variables miss. | dark on first load, zero SCSS errors, explicit list of uncovered screens |
-| **D** | [D-branding/](D-branding/) | Branding (title, favicon, login, company, mail) — Remove every customer-visible trace of the upstream brand. | no odoo.com or Manage Databases on the login page, company renamed |
-| **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH |
-| **F** | [F-token-sync/](F-token-sync/) | Single token source + site copy parity — One tokens.json generating both surfaces, and marketing copy audited against reality. | one token change reaches both surfaces, no unsupported live badge |
-| **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented |
-| **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode |
+| Phase | Folder | Purpose | Gate (phase is done when) | Status |
+|---|---|---|---|---|
+| **A** | [A-baseline/](A-baseline/) | Baseline (evidence only, no code) — Freeze today's reality with reproducible evidence, including production and the language/RTL facts. | 4 screenshots + evidence.log, and no source file modified in either repo | ✅ done |
+| **B** | [B-scaffolding/](B-scaffolding/) | Scaffolding (module repo + addons path) — A separate acczed-addons repo, a third addons path, and an empty module that installs green. | acczed_theme shows installed in SQL, with zero visual change | ⏳ |
+| **C** | [C-dark-theme/](C-dark-theme/) | Dark Space Botanical backend theme — Repaint the backend from one variable layer, make dark the default, cover what variables miss. | dark on first load, zero SCSS errors, explicit list of uncovered screens | ⏳ |
+| **D** | [D-branding/](D-branding/) | Branding (title, favicon, login, company, mail) — Remove every customer-visible trace of the upstream brand. | no odoo.com or Manage Databases on the login page, company renamed | ⏳ |
+| **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH | ⏳ |
+| **F** | [F-token-sync/](F-token-sync/) | Single token source + site copy parity — One tokens.json generating both surfaces, and marketing copy audited against reality. | one token change reaches both surfaces, no unsupported live badge | ⏳ |
+| **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented | 🅿️ |
+| **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode | ⏳ |
 
 Execution order: A → B → **E** → C → D → F (E before C because an Arabic tour of a theme is cheaper
 than a theme tour twice; F last because it locks what C, D and E produced). G is parked by the user.
@@ -58,7 +58,7 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 | [ACC-A05](A-baseline/ACC-A05-capture-language-rtl-baseline.md) | Capture language + RTL baseline | ACC-A01 | 10 min | ✅ |
 | [ACC-A06](A-baseline/ACC-A06-promises-vs-reality-table.md) | Complete the promises-vs-reality table | ACC-A02, ACC-A03, ACC-A04, ACC-A05 | 20 min | ✅ |
 | [ACC-A07](A-baseline/ACC-A07-answer-open-questions.md) | Answer the seven open questions | ACC-A06 | 15 min | ✅ |
-| [ACC-A08](A-baseline/ACC-A08-phase-a-acceptance.md) | Phase A acceptance check | ACC-A01..ACC-A07 | 10 min | ⏳ |
+| [ACC-A08](A-baseline/ACC-A08-phase-a-acceptance.md) | Phase A acceptance check | ACC-A01..ACC-A07 | 10 min | ✅ |
 
 ### Phase B — Scaffolding (module repo + addons path)
 
