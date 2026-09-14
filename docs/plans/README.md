@@ -3,8 +3,9 @@
 All planning for this product lives in this folder. One file per task, one folder per phase, and the
 identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
-**Session mode:** execution. Phase A is being worked; every fact quoted in these tasks was verified from
-the live code and the running database on 2026-09-14, with a `file:line` reference so it can be re-checked.
+**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete; every fact
+quoted in these tasks was verified from the live code and the running database on 2026-09-14, with a
+`file:line` reference so it can be re-checked. Next up: ACC-F04 (pulled forward), then phase E.
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -19,7 +20,7 @@ the live code and the running database on 2026-09-14, with a `file:line` referen
 | Phase | Folder | Purpose | Gate (phase is done when) | Status |
 |---|---|---|---|---|
 | **A** | [A-baseline/](A-baseline/) | Baseline (evidence only, no code) — Freeze today's reality with reproducible evidence, including production and the language/RTL facts. | 4 screenshots + evidence.log, and no source file modified in either repo | ✅ done |
-| **B** | [B-scaffolding/](B-scaffolding/) | Scaffolding (module repo + addons path) — A separate acczed-addons repo, a third addons path, and an empty module that installs green. | acczed_theme shows installed in SQL, with zero visual change | ⏳ |
+| **B** | [B-scaffolding/](B-scaffolding/) | Scaffolding (module repo + addons path) — A separate acczed-addons repo, a third addons path, and an empty module that installs green. | acczed_theme shows installed in SQL, with zero visual change | ✅ done |
 | **C** | [C-dark-theme/](C-dark-theme/) | Dark Space Botanical backend theme — Repaint the backend from one variable layer, make dark the default, cover what variables miss. | dark on first load, zero SCSS errors, explicit list of uncovered screens | ⏳ |
 | **D** | [D-branding/](D-branding/) | Branding (title, favicon, login, company, mail) — Remove every customer-visible trace of the upstream brand. | no odoo.com or Manage Databases on the login page, company renamed | ⏳ |
 | **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH | ⏳ |
@@ -64,13 +65,13 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
-| [ACC-B01](B-scaffolding/ACC-B01-create-addons-repo.md) | Create the acczed-addons repository | ACC-A08 | 10 min | ⏳ |
-| [ACC-B02](B-scaffolding/ACC-B02-write-conventions-doc.md) | Write docs/CONVENTIONS.md for module work | ACC-B01 | 15 min | ⏳ |
-| [ACC-B03](B-scaffolding/ACC-B03-create-theme-module-skeleton.md) | Create the acczed_theme module skeleton | ACC-B02 | 15 min | ⏳ |
-| [ACC-B04](B-scaffolding/ACC-B04-add-addons-path-local.md) | Add the acczed-addons path to the local odoo.conf | ACC-B03 | 10 min | ⏳ |
-| [ACC-B05](B-scaffolding/ACC-B05-install-theme-module.md) | Install acczed_theme in the acczed database | ACC-B04 | 10 min | ⏳ |
-| [ACC-B06](B-scaffolding/ACC-B06-verify-no-visual-change.md) | Verify the skeleton changed nothing visually | ACC-B05 | 10 min | ⏳ |
-| [ACC-B07](B-scaffolding/ACC-B07-document-production-rollout.md) | Document the production rollout (documentation only) | ACC-B05 | 15 min | ⏳ |
+| [ACC-B01](B-scaffolding/ACC-B01-create-addons-repo.md) | Create the acczed-addons repository | ACC-A08 | 10 min | ✅ |
+| [ACC-B02](B-scaffolding/ACC-B02-write-conventions-doc.md) | Write docs/CONVENTIONS.md for module work | ACC-B01 | 15 min | ✅ |
+| [ACC-B03](B-scaffolding/ACC-B03-create-theme-module-skeleton.md) | Create the acczed_theme module skeleton | ACC-B02 | 15 min | ✅ |
+| [ACC-B04](B-scaffolding/ACC-B04-add-addons-path-local.md) | Add the acczed-addons path to the local odoo.conf | ACC-B03 | 10 min | ✅ |
+| [ACC-B05](B-scaffolding/ACC-B05-install-theme-module.md) | Install acczed_theme in the acczed database | ACC-B04 | 10 min | ✅ |
+| [ACC-B06](B-scaffolding/ACC-B06-verify-no-visual-change.md) | Verify the skeleton changed nothing visually | ACC-B05 | 10 min | ✅ |
+| [ACC-B07](B-scaffolding/ACC-B07-document-production-rollout.md) | Document the production rollout (documentation only) | ACC-B05 | 15 min | ✅ |
 
 ### Phase C — Dark Space Botanical backend theme
 

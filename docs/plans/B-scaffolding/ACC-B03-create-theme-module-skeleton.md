@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | B — Scaffolding (module repo + addons path) |
-| **Status** | ⏳ not started |
+| **Status** | ✅ done (2026-09-14 — see `evidence/evidence.log`)|
 | **Depends on** | ACC-B02 |
 | **Estimated** | 15 min |
 | **Touches** | `acczed-addons/acczed_theme/` |
@@ -44,6 +44,21 @@ Prove the module pipeline (discovery → install) works before any styling exist
 
 - [ ] module skeleton present
 - [ ] manifest valid
+
+## Result (2026-09-14)
+
+Skeleton committed as `d79bb20`. Four files exactly as specified:
+
+```
+acczed_theme/__init__.py               from . import models
+acczed_theme/models/__init__.py        (empty)
+acczed_theme/__manifest__.py           version 19.0.0.1.0, depends ['web'], license LGPL-3
+acczed_theme/views/brand_templates.xml empty <odoo/> stub
+```
+
+Verified beyond the task's own check: the manifest not only parses but **evaluates**, its version
+matches the `19.0.x.y.z` pattern, `depends == ['web']` exactly, license is `LGPL-3`, and the XML stub
+is well-formed. Confirmed no `.scss`/`.css` exists yet — the verification's "no styling file" clause.
 
 ---
 ← Phase B index: [../README.md](../README.md)

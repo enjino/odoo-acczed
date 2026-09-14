@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | B — Scaffolding (module repo + addons path) |
-| **Status** | ⏳ not started |
+| **Status** | ✅ done (2026-09-14 — see `evidence/evidence.log`)|
 | **Depends on** | ACC-A08 |
 | **Estimated** | 10 min |
 | **Touches** | `~/Desktop/Projects/acczed-addons/` (new repo) |
@@ -49,6 +49,16 @@ Give every acczed Odoo module its own repository, separate from the Odoo fork, s
 ## Risks / notes
 
 - Do not put this repo inside the odoo-acczed working tree.
+
+## Result (2026-09-14)
+
+Created `~/Desktop/Projects/acczed-addons` — outside the odoo-acczed working tree, as the task
+requires. `git init -b main`, `README.md` ("acczed product modules for Odoo 19 (identity first, then
+Saudi functionality)"), `.gitignore` (`*.pyc`, `__pycache__/`, `.venv/`, `*.log`), one commit
+`9faa1b2 chore(repo): init acczed-addons`.
+
+Verified `odoo-acczed` is unaffected: `git status --short` there still shows only the pre-existing
+`?? logs/`. No module code exists yet, as expected — that is ACC-B03.
 
 ---
 ← Phase B index: [../README.md](../README.md)
