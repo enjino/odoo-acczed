@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | B — Scaffolding (module repo + addons path) |
-| **Status** | ⏳ not started |
+| **Status** | ✅ done (2026-09-14 — see `evidence/evidence.log`)|
 | **Depends on** | ACC-B01 |
 | **Estimated** | 15 min |
 | **Touches** | `acczed-addons/docs/CONVENTIONS.md` |
@@ -46,6 +46,21 @@ Fix the rules once, so every future module (and every subagent) inherits the sam
 
 - [ ] CONVENTIONS.md committed
 - [ ] task + commit naming rules stated
+
+## Result (2026-09-14)
+
+`acczed-addons/docs/CONVENTIONS.md` written and committed (`3ada833`). All seven rules are present
+with a one-line reason each, plus the task/branch/commit naming table.
+
+Two rules carry lessons from Phase A rather than being generic advice:
+
+- **Rule 5** records that plain `google-chrome --headless --screenshot` silently captures a *blank*
+  Odoo page (the login form is `d-none` until OWL reveals it), so the rule points at `tools/shot.js`
+  in the odoo-acczed repo instead of at "take a screenshot".
+- **Rule 6** records that rtlcss mirroring turns a hardcoded `left` into a wrong-side element with no
+  error raised — the failure is invisible unless someone reads Arabic.
+
+The task-file convention matches the actual `docs/plans/` layout, as the verification requires.
 
 ---
 ← Phase B index: [../README.md](../README.md)

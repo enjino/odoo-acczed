@@ -100,3 +100,61 @@
                        production; only the local instance differs. But production `res_company.name`
                        is still **YourCompany**, the same stock value as local, so ACC-D03's rename
                        is genuinely outstanding in BOTH environments.
+
+# === PHASE B — scaffolding (module repo + addons path) ===
+
+# --- ACC-B01 acczed-addons repo ---
+2026-09-14 | mkdir ~/Desktop/Projects/acczed-addons && git init -b main | new repo, outside the odoo-acczed working tree
+2026-09-14 | git log --oneline | 9faa1b2 chore(repo): init acczed-addons  (README.md + .gitignore committed)
+2026-09-14 | cd odoo-acczed && git status --short | unchanged (?? logs/ only) — the new repo does not nest
+
+# --- ACC-B02 module conventions ---
+2026-09-14 | acczed-addons/docs/CONVENTIONS.md written | 7 binding rules + task/branch/commit naming; commit 3ada833
+
+# --- ACC-B03 acczed_theme skeleton ---
+2026-09-14 | find acczed_theme -type f | __init__.py, __manifest__.py, models/__init__.py, views/brand_templates.xml
+2026-09-14 | python -c "eval(manifest)" | version 19.0.0.1.0 matches 19.0.x.y.z; depends == ['web']; license LGPL-3
+2026-09-14 | ET.parse(brand_templates.xml) | well-formed
+2026-09-14 | find acczed_theme -name "*.scss" -o -name "*.css" | none — correct, no styling exists yet (commit d79bb20)
+
+# --- ACC-B04 addons path ---
+2026-09-14 | odoo.conf addons_path | prepended /home/ahmed-karmy/Desktop/Projects/acczed-addons (first, so the fork cannot shadow a product module)
+2026-09-14 | bash run-odoo.sh stop && start | new pids 179645 (http) / 179646 (gevent)
+2026-09-14 | grep "addons paths" logs/odoo.log | ['.../odoo/addons', '~/.local/share/odoo-acczed/addons/19.0', '/home/ahmed-karmy/Desktop/Projects/acczed-addons', '.../odoo-acczed/addons']
+2026-09-14 | curl -sL -c/-b cj "http://localhost:8069/web/login?db=acczed" | HTTP 200  (stack still serving)
+2026-09-14 | NOTE | `run-odoo.sh status` reports "login page: HTTP 303" — its internal curl has no
+                       cookie jar, so it observes the first-request redirect, not a failure. Same root
+                       cause as ACC-A01. Trust the cookie-jar curl, not that line.
+2026-09-14 | NOTE | odoo.conf is gitignored (`/odoo.conf`), so this addons_path change is machine-local
+                       and is NOT in git — a fresh clone would not discover acczed-addons. The edit is
+                       backed up at /tmp/odoo.conf.bak.* and must be documented somewhere tracked
+                       (ACC-B07 is the natural home).
+
+# --- ACC-B05 install acczed_theme ---
+2026-09-14 | odoo-bin -c odoo.conf -d acczed -i acczed_theme --stop-after-init | exit 0
+2026-09-14 |   ...log | "Loading module acczed_theme (42/42)" ; "loading acczed_theme/views/brand_templates.xml" ; "Module acczed_theme loaded in 0.14s, 10 queries"
+2026-09-14 | P=select name,state,latest_version from ir_module_module where name='acczed_theme' | acczed_theme|installed|19.0.0.1.0
+2026-09-14 | P=select count(*) filter (where state='installed') from ir_module_module | 42  (was 41)
+2026-09-14 | bash run-odoo.sh start | pid 180687 / 180688 ; serving 200 after 2s ; 0 new ERROR/CRITICAL lines
+2026-09-14 | OBSERVED | the install log confirms ACC-A01's root cause verbatim:
+                       "option db_name reads 'False' in the config file at .../odoo.conf but isn't a
+                       boolean option, skip". So `db_name = False` is a WARNING-producing no-op, not a
+                       real setting — which is why an unqualified /web/login cannot resolve a database.
+
+# --- ACC-B06 negative control ---
+2026-09-14 | screenshot | evidence/after-b05-backend-home.png (210155 bytes)
+2026-09-14 | screenshot | evidence/after-b05-backend-list.png (35558 bytes)
+2026-09-14 | sha256 before vs after | DIFFER (210110 vs 210155 bytes) — but see the pixel diff:
+2026-09-14 | PIL ImageChops.difference | home: 72 / 1,600,000 px differ (0.0045%), bbox (1387,13,1584,87)
+                       | list: 64 / 1,600,000 px differ (0.0040%), bbox (1387,13,1395,22)
+2026-09-14 | crop inspection of that bbox | the ONLY difference is the unread-message badge in the
+                       systray going 7 -> 8. Navbar, company name, avatar, "1-54 / 54", view switcher
+                       are pixel-identical. No structural or styling change.
+2026-09-14 | getComputedStyle(.btn-primary).backgroundColor | rgb(113, 99, 158) = #71639e  (unchanged)
+2026-09-14 | getComputedStyle(.o_main_navbar).backgroundColor | rgb(113, 99, 158)  (unchanged)
+2026-09-14 | cd odoo-acczed && git status --short addons/web/ | empty — the fork tree is untouched
+2026-09-14 | NOTE | negative-control method: do NOT compare screenshot file hashes. The systray carries
+                       live counters (unread messages, activities) that change between runs, so two
+                       captures of an identical UI legitimately differ by tens of bytes. Compare
+                       pixels and inspect the bounding box, or the check produces a false failure.
+                       The acceptance criterion is "no differing pixel outside the dynamic systray".
