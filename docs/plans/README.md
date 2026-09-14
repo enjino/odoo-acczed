@@ -3,9 +3,10 @@
 All planning for this product lives in this folder. One file per task, one folder per phase, and the
 identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
-**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete; every fact
-quoted in these tasks was verified from the live code and the running database on 2026-09-14, with a
-`file:line` reference so it can be re-checked. Next up: ACC-F04 (pulled forward), then phase E.
+**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete, and
+**ACC-F04** has been pulled forward and shipped (the site no longer overclaims). Every fact quoted in
+these tasks was verified from the live code and the running database on 2026-09-14, with a `file:line`
+reference so it can be re-checked. **Next up: phase E (Arabic and RTL).**
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -112,7 +113,7 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 | [ACC-F01](F-token-sync/ACC-F01-define-tokens-json.md) | Define tokens.json as the single source of truth | ACC-C01 | 1 hr | ⏳ |
 | [ACC-F02](F-token-sync/ACC-F02-token-generator-script.md) | Generate both outputs from tokens.json | ACC-F01 | 3 hrs | ⏳ |
 | [ACC-F03](F-token-sync/ACC-F03-verify-token-propagation.md) | Verify one token change reaches both surfaces | ACC-F02 | 30 min | ⏳ |
-| [ACC-F04](F-token-sync/ACC-F04-reconcile-site-copy.md) | Reconcile the marketing copy with the audited reality (**pulled forward — runs ahead of ACC-G03**) | ACC-A06 | 3 hrs | ⏳ |
+| [ACC-F04](F-token-sync/ACC-F04-reconcile-site-copy.md) | Reconcile the marketing copy with the audited reality (**pulled forward — runs ahead of ACC-G03**) | ACC-A06 | 3 hrs | ✅ |
 | [ACC-F05](F-token-sync/ACC-F05-verify-signin-parity.md) | Verify sign-in parity between site and backend | ACC-D02 | 1 hr | ⏳ |
 | [ACC-F06](F-token-sync/ACC-F06-bilingual-marketing-site.md) | Build the marketing site bilingual (en + ar) | ACC-F04 | 1–2 days | ⏳ |
 

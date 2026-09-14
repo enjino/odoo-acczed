@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | F — Single token source + site copy parity |
-| **Status** | ⏳ not started — **pulled forward, runs ahead of ACC-G03** (decision 4, 2026-09-14) |
+| **Status** | ✅ done (2026-09-14 — deployed to production, `evidence/evidence.log`) |
 | **Depends on** | ACC-A06 |
 | **Estimated** | 3 hrs |
 | **Touches** | `acczed-site/app/page.tsx` |
@@ -58,6 +58,43 @@ The site currently sells 44 connected apps, ZATCA filing and a Saudi chart of ac
 - [ ] copy reconciled with evidence
 - [ ] site redeployed
 - [ ] no unsupported claim left
+
+## Result (2026-09-14) — deployed
+
+Three false `live` badges now read "in the works": ZATCA e-invoicing, Arabic/right-to-left, and the
+Saudi chart of accounts. Payroll was already honest and "Your data, your servers" stays `live` (true).
+Committed in `acczed-site` as `a75a356`.
+
+**The task's claim list was incomplete, and so was ACC-A06's.** Both enumerated only *badged and
+numeric* claims. Reading the rendered page found three more false present-tense assertions in **prose**:
+
+| Location | Before | After |
+|---|---|---|
+| hero lede `:154-156` | "…accounting wired to ZATCA, payroll that understands the Kingdom, and an interface that reads right-to-left…" | "…**rolling out Saudi-first**: accounting wired to ZATCA, …" |
+| feature list `:203` | "Arabic and English, RTL and LTR, side by side." | same, "— **rolling out**." |
+| hero stats `:163,165` | "**44** business apps" · "**2** languages, both directions" | "**Odoo 19** / one platform" · "**EN + AR** / rolling out (2 langs)" |
+
+The lede is the most prominent copy on the page and would have left the whole exercise half-done.
+
+## Verification
+
+- Site rebuilt (`next build`, static) and the rendered `#saudi` checked: **4 × "in the works", 1 × "live"**.
+- Deployed: `dpl_GwotHPLJNNAYQSoGwpxhrFz6QTs3`, target `production`, `READY`.
+- Live `https://app.acczed.online` re-read: `tag-live` 8 → **2**, `tag-wip` 2 → **8**, `>44<` 2 → **0**,
+  "2 languages" → **0**. (Counts double because Next emits each string in both the SSR HTML and the
+  serialised props — 1 real `live`, 4 real "in the works".)
+- Screenshot: `evidence/after-f04-site-live.png`.
+
+## Risks / notes (added)
+
+- **Left deliberately unchanged, needs a human call:** `page.tsx:213` — *"Every app your business needs.
+  Already connected."* Softer than the badges (it describes the platform's shape, not a specific
+  installed capability) but still present-tense. Not edited unilaterally.
+- The `#why` section poses ZATCA/Arabic questions and says "acczed is our answer to those questions"
+  (`:177-191`). Positioning rather than a factual claim, so left alone — but it sits close to the line
+  while ZATCA and Arabic do not work.
+- **Flipping these back to `live` is per-claim**, as decision 4 says: ZATCA + chart of accounts after
+  ACC-G03, Arabic after ACC-E03. Do not re-run F04 as one pass.
 
 ---
 ← Phase F index: [../README.md](../README.md)

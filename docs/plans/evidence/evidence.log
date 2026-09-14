@@ -158,3 +158,38 @@
                        captures of an identical UI legitimately differ by tens of bytes. Compare
                        pixels and inspect the bounding box, or the check produces a false failure.
                        The acceptance criterion is "no differing pixel outside the dynamic systray".
+
+# === ACC-F04 — pulled forward ahead of ACC-G03 (decision 4) ===
+
+2026-09-14 | acczed-site git diff | app/page.tsx, 3 insertions / 3 deletions for the badges; plus the lede, 2 stats and 1 list item
+2026-09-14 | badge state before | SAUDI: ZATCA live, Arabic live, chart-of-accounts live, payroll "in the works", your-servers live
+2026-09-14 | badge state after  | ZATCA in the works, Arabic in the works, chart-of-accounts in the works, payroll in the works, your-servers **live**
+2026-09-14 | npx next build | succeeded (static, 2 routes)
+2026-09-14 | PIL render check of #saudi | 4 x tag-wip, 1 x tag-live — matches intent; "Your data, your servers" not touched
+2026-09-14 | POST /v13/deployments?teamId=&skipAutoDetectionConfirmation=1 | 400 missing_files -> uploaded 1 file (app/page.tsx) via POST /v2/files -> retry 200
+2026-09-14 | deployment | id dpl_GwotHPLJNNAYQSoGwpxhrFz6QTs3, target production, readyState READY
+2026-09-14 | curl -sL https://app.acczed.online | HTTP 200
+2026-09-14 |   claim scan | tag-live 2 (was 8), tag-wip 8 (was 2), ">44<" 0 (was 2), "2 languages" 0, "EN + AR" 2, "rolling out" 6
+2026-09-14 |   note | counts are doubled because Next emits each string once in the SSR HTML and once in the
+                       serialised props; 1 real live badge and 4 real "in the works" badges.
+2026-09-14 | screenshot | evidence/after-f04-site-live.png (live app.acczed.online, full page)
+2026-09-14 | acczed-site commit | a75a356
+
+2026-09-14 | OBSERVED | **the ACC-A06 audit was incomplete.** It enumerated the 4 hero stats, the 5 SAUDI
+                       cards and the Sign-in link (10 claims) and concluded "no claim is unlinked" —
+                       but it audited only *badged and numeric* claims and missed the page's **prose**.
+                       Three further assertions were false and had to be fixed here:
+                         - the hero lede asserted ZATCA + payroll + RTL in the present tense
+                           (page.tsx:154-156) — the most prominent copy on the page;
+                         - "Arabic and English, RTL and LTR, side by side." (:203);
+                         - and "Every app your business needs. Already connected." (:213), which is
+                           still live and still arguably overclaiming — see below.
+                       ACC-A06's "every public claim" claim should be read as "every badge and stat".
+2026-09-14 | STILL OPEN | page.tsx:213 "Every app your business needs. Already connected." — not
+                       changed. Softer than the badges (it is about the platform's shape rather than
+                       a specific installed capability), but it reads as present-tense. Left for a
+                       human call rather than edited unilaterally.
+2026-09-14 | STILL OPEN | the `#why` FAQ poses "How do we file with ZATCA … in Arabic …" and then says
+                       "acczed is our answer to those questions" (:177-191). That is positioning, not
+                       a specific factual claim, so it was left alone — but it sits close to the line
+                       given ZATCA and Arabic do not work yet.
