@@ -20,11 +20,26 @@ An Arabic interface is not finished when the words change — it is finished whe
 
 ## Steps
 
-- [ ] **1. Check the document root**
+- [ ] **1. Check the document root**  ⚠️ *corrected 2026-09-15 — the original expectation was wrong*
   ```bash
-  # devtools: <html dir="rtl"> and .o_rtl present on the webclient root
+  # Backend webclient: o_rtl lands on <body>, added by JS after mount. <html> has NO dir attribute.
+  node tools/rtl-browser-check.js --expect rtl     # asserts exactly this, plus the portal
   ```
-  → expected: dir=rtl + o_rtl
+  → expected: backend `body.o_rtl=true` **and `<html dir>` = null**; portal `<html dir="rtl">` and
+  `#wrapwrap.o_rtl`. Measured 2026-09-15 on a confirmed-working install:
+  `backend dir=null body.o_rtl=true | portal dir=rtl #wrapwrap.o_rtl=true`
+
+> ⚠️ **Two corrections to what this task originally said.** (1) `<html>` never carries `dir` in the
+> backend webclient — `webclient_templates.xml:18` is `<html t-att="html_data or {}">` and every
+> `html_data` in that file sets only `style`. Checking for `<html dir="rtl">` there fails on a
+> perfectly good RTL install. The portal *does* set it, via `portal_templates.xml:5`. (2) `o_rtl` is
+> added **client-side** to `document.body` (`start.js:46`), so it is in no server response — it cannot
+> be curl'd or grepped, only observed in a browser.
+
+> ℹ️ **The portal's `<html dir>` is not curl-checkable either**, despite being server-rendered: it
+> comes from `request.env.lang`, and a curl session that never runs the webclient's `session_info` RPC
+> keeps a stale `en_US` context. Measured: curl reported `dir=ltr` for the same user a real browser
+> rendered as `dir=rtl`. Use the browser.
 - [ ] **2. Tour and screenshot the Arabic UI**
   ```bash
   docs/plans/evidence/after-backend-ar-list.png
@@ -36,6 +51,11 @@ An Arabic interface is not finished when the words change — it is finished whe
   cd ~/Desktop/Projects/acczed-addons && grep -rn "left:\|right:\|margin-left\|margin-right\|padding-left\|padding-right" acczed_theme/static/src/scss/ | grep -v "rtl:ignore"
   ```
   → expected: no hits outside rtl:ignore cases
+
+  > ⚠️ **This passes vacuously today.** `acczed_theme` has no `static/` directory yet (it holds only
+  > `__manifest__.py`, `__init__.py`, `models/`, `views/`), and `static/src/scss/` is created by
+  > **ACC-C01**. Until C01 has run there is nothing to audit and a green result means nothing. Run this
+  > check after C01/C03, not before.
 
 ## Verification
 

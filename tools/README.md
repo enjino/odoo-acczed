@@ -63,3 +63,49 @@ NODE_PATH=/path/to/node_modules node tools/shot.js ...
 A PNG existing proves nothing. Check the file size changes when the page changes, and open it. Two
 captures of the same page should be near byte-identical — `before-backend-home.png` reproduces at
 exactly 210110 bytes.
+
+---
+
+## `verify-rtl.sh` — the RTL harness (ACC-E02 / ACC-E03)
+
+```bash
+bash tools/verify-rtl.sh            # every seam
+bash tools/verify-rtl.sh --check 1  # one seam
+```
+
+Asserts that an Arabic-language user really gets a right-to-left session, at the four seams agreed for
+phase E. Exit 1 if anything fails, so it can gate a commit. Every assertion has a **negative control**
+(a case that must come out the other way) — without one, a check that always passes proves nothing.
+
+| Seam | What it observes | Why it is the right seam |
+|---|---|---|
+| 1 | `/web/webclient/translations` → `lang_parameters.direction` | The endpoint whose value drives `o_rtl` client-side. Also proves the language is *active*: `webclient.py:59-60` drops any non-active `lang` to `None`. |
+| 2+3 | Browser: portal `<html dir>`, backend `document.body.o_rtl` | `o_rtl` is added by JS after mount (`start.js:46`) and appears in **no** server response — only a browser can see it. |
+| 4 | `res.lang` active flag + direction | Fastest pre-flight; asserts the row, not the behaviour. |
+
+## `rtl-browser-check.js` — the browser half
+
+```bash
+ACCZED_LOGIN=arabic_test ACCZED_PASSWORD=arabic_test node tools/rtl-browser-check.js --expect rtl
+node tools/rtl-browser-check.js --expect ltr      # negative control, as admin
+```
+
+Logs in the way `shot.js` does, then reads the live DOM on `/odoo` and `/my/home`. `--expect` makes the
+same code check both directions, so one script proves the Arabic user is RTL *and* that an English user
+is not.
+
+## Four traps these tools exist to avoid
+
+1. **`<html dir="rtl">` is not where RTL shows up in the backend.** Measured on a working install:
+   `dir=null`, `body.o_rtl=true`. `webclient_templates.xml:18` renders `<html t-att="html_data or {}">`
+   and every `html_data` sets only `style`. Only the portal sets `dir` on `<html>`
+   (`portal_templates.xml:5`). ACC-E03 originally expected the wrong thing.
+2. **The portal's server-rendered `dir` is still not curl-checkable.** It reads `request.env.lang`, and
+   a curl session that never runs the webclient's `session_info` RPC keeps a stale `en_US` context —
+   measured `dir=ltr` by curl for a user a browser rendered `dir=rtl`. Check it in a browser.
+3. **`grep rtlcss logs/odoo.log` proves nothing.** Odoo logs rtlcss **only on failure**
+   (`assetsbundle.py:665-674`). A working install produced 0 matching lines. To prove mirroring, compare
+   the served LTR and RTL bundles' directional property counts.
+4. **After activating a language, restart the service.** `_get_active_by` caches with
+   `cache='stable'` (`res_lang.py:315-316`), so a separate process's activation does not reach a
+   running server — SQL says active while the server still answers `lang=null`.

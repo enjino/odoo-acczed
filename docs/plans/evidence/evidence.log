@@ -193,3 +193,26 @@
                        "acczed is our answer to those questions" (:177-191). That is positioning, not
                        a specific factual claim, so it was left alone — but it sits close to the line
                        given ZATCA and Arabic do not work yet.
+
+2026-09-15 | npm i -g --prefix ~/.local rtlcss | added 7 packages in 5s, exit 0  (ACC-E01 step 1)
+2026-09-15 | rtlcss --version | rtlcss version: 4.3.0  — resolves at ~/.local/bin/rtlcss, which is on PATH
+2026-09-15 | printf '.a { margin-left: 10px; text-align: left; padding-right: 4px; }' | rtlcss -c odoo/addons/base/data/rtlcss.json - | .a { margin-right: 10px; text-align: right; padding-left: 4px; }  exit 0
+             ^ Odoo's exact invocation (assetsbundle.py:661: rtlcss -c base/data/rtlcss.json -), replayed by hand.
+               Proves binary + Odoo config good. NOT the runtime path — that needs an RTL language (ACC-E02).
+2026-09-15 | ls odoo/addons/base/data/rtlcss.json | present, 444 bytes  (config path in assetsbundle.py:661 resolves)
+2026-09-15 | grep -rn run_rtlcss odoo/addons/base/models/assetsbundle.py | :592 called only when self.rtl is set → E01 step 3 cannot run before E02
+
+# --- ACC-E02 activate ar_001 + dedicated Arabic user ---
+2026-09-15 | odoo-bin shell -d acczed --no-http | _activate_and_install_lang('ar_001'); env.cr.commit() -> log shows "loading translation file .../i18n/ar.po for language ar_001" for every installed module
+2026-09-15 | CORRECTION | E02 step 2 said _activate_lang. That sets active=True directly and BYPASSES action_unarchive, which is the only thing calling _update_translations (res_lang.py:334-342). Would have shipped direction=rtl with English labels.
+2026-09-15 | docker exec odoo-postgres psql -U odoo -d acczed -tAc "select code,active,direction from res_lang where code like 'ar%' or active" | ar_001|t|rtl ; en_US|t|ltr ; ar_SY|(null)|rtl
+2026-09-15 | env['res.users'].create({login:'arabic_test', lang:'ar_001', group_ids:[base.group_user]}) | created id=7, groups=['Role / User']  (Odoo 19 renamed groups_id -> group_ids, res_users.py:257)
+2026-09-15 | CACHE TRAP | after activation SQL said active=t while the RUNNING server still answered ?lang=ar_001 -> lang=null. A fresh process saw ar_001 in get_installed() straight away. Cause: _get_active_by is @tools.ormcache(cache='stable') (res_lang.py:315-316). Restarting the service fixed it — anyone following E02 as written will see it "not work".
+2026-09-15 | bash tools/verify-rtl.sh | 7 passed, 0 failed — all 4 agreed seams, each with a negative control
+2026-09-15 | node tools/rtl-browser-check.js --expect rtl (arabic_test) | backend dir=null body.o_rtl=true ; portal dir=rtl #wrapwrap.o_rtl=true
+2026-09-15 | node tools/rtl-browser-check.js --expect ltr (admin) | backend dir=null body.o_rtl=false ; portal dir=ltr #wrapwrap.o_rtl=false   (negative control: RTL is not forced on everyone)
+2026-09-15 | CORRECTION | ACC-E03 step 1 expected <html dir="rtl"> on the webclient root. Measured: backend <html dir> is NULL on a working install — webclient_templates.xml:18 renders <html t-att="html_data or {}"> and every html_data sets only style. o_rtl is added to document.body by JS (start.js:46) and is in no server response. Only the PORTAL sets dir on <html> (portal_templates.xml:5).
+2026-09-15 | curl /odoo as arabic_test vs admin -> bundle URLs | LTR web.assets_web.min.css (973643 B) vs RTL web.assets_web.rtl.min.css (974006 B) — different bodies
+2026-09-15 | directional counts, LTR vs RTL bundle | margin-left 339->250, margin-right 250->339, padding-left 295->267, padding-right 266->294  => rtlcss genuinely mirrored. ACC-E01 step 3 CLOSED.
+2026-09-15 | grep -ci rtlcss logs/odoo.log | 0 on a WORKING install — Odoo logs rtlcss only on failure (assetsbundle.py:665-674), so E01's original "grep the log" check was unfalsifiable. Replaced with the bundle comparison above.
+2026-09-15 | NOTE | the portal's server-rendered <html dir> is NOT curl-checkable: it reads request.env.lang, and a curl session that never runs the webclient's session_info RPC keeps a stale en_US context. Measured dir=ltr by curl for the same user a browser rendered dir=rtl.
