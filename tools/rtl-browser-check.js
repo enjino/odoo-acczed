@@ -80,12 +80,50 @@ const wantRtl = opt.expect === 'rtl';
     }));
   };
 
+  // --- ACC-E03: does the layout actually MIRROR, not just switch direction? ----------------------
+  //
+  // `direction: rtl` alone only reorders inline text. These read real geometry from a real browser
+  // and assert the four layout seams agreed for E03 (2026-09-15). Each is written so that the
+  // LTR and RTL expectations are OPPOSITE, which is what makes the pair falsifiable: the same code
+  // run with --expect ltr against an Arabic user must fail.
+  const layout = async (url, readySel) => {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForSelector(readySel, { state: 'visible', timeout: 30000 });
+    await page.waitForTimeout(2000);
+    return page.evaluate(() => {
+      const centerX = sel => {
+        const el = document.querySelector(sel);
+        if (!el) return null;
+        const b = el.getBoundingClientRect();
+        return b.left + b.width / 2;
+      };
+      const centersX = (sel, n) => [...document.querySelectorAll(sel)].slice(0, n)
+        .map(e => { const b = e.getBoundingClientRect(); return b.left + b.width / 2; });
+      return {
+        W: window.innerWidth,
+        systray: centerX('.o_menu_systray'),
+        appsMenu: centerX('.o_navbar_apps_menu'),
+        cells: centersX('.o_data_row .o_data_cell', 3),
+        cards: centersX('.o_kanban_record', 3),
+        label: centerX('.o_form_label'),
+        field: centerX('.o_field_widget'),
+      };
+    });
+  };
+
   const backend = await read(`${opt.base}/odoo`, '.o_main_navbar');
   const portal = await read(`${opt.base}/my/home`, '#wrapwrap');
+  const list = await layout(`${opt.base}/odoo/action-base.action_res_users`, '.o_list_view');
+  const kanban = await layout(`${opt.base}/odoo/apps`, '.o_kanban_view');
+  const form = await layout(`${opt.base}/odoo/action-base.action_res_users/2`, '.o_form_view');
 
   console.log(`user=${user} expect=${opt.expect}`);
   console.log(`backend  dir=${backend.dir}  body.o_rtl=${backend.bodyRtl}`);
   console.log(`portal   dir=${portal.dir}  #wrapwrap.o_rtl=${portal.wrapRtl}`);
+  console.log(`chrome   systray=${Math.round(list.systray)} appsMenu=${Math.round(list.appsMenu)} (W=${list.W})`);
+  console.log(`list     cell centers: ${list.cells.map(Math.round).join(', ')}`);
+  console.log(`kanban   card centers: ${kanban.cards.map(Math.round).join(', ')}`);
+  console.log(`form     label=${Math.round(form.label)} field=${Math.round(form.field)}`);
   if (jsErrors.length) console.log('js errors: ' + jsErrors.join(' | '));
 
   const problems = [];
@@ -93,6 +131,39 @@ const wantRtl = opt.expect === 'rtl';
   if (portal.wrapRtl !== wantRtl) problems.push(`portal #wrapwrap.o_rtl=${portal.wrapRtl}, expected ${wantRtl}`);
   if (wantRtl && portal.dir !== 'rtl') problems.push(`portal <html dir> = ${portal.dir}, expected rtl`);
   if (!wantRtl && portal.dir === 'rtl') problems.push(`portal <html dir> = rtl, expected not-rtl`);
+
+  // Seam A — chrome swaps sides. In LTR the systray hugs the right edge and the apps menu the left;
+  // in RTL each is on the opposite half. Asserted by half, not by pixel, so it survives any content.
+  const side = (x, W) => (x < W / 2 ? 'left' : 'right');
+  if (list.systray === null || list.appsMenu === null) {
+    problems.push('chrome: systray or apps menu not found');
+  } else {
+    const systraySide = side(list.systray, list.W);
+    const appsSide = side(list.appsMenu, list.W);
+    const wantSystray = wantRtl ? 'left' : 'right';
+    if (systraySide !== wantSystray) problems.push(`systray on ${systraySide}, expected ${wantSystray}`);
+    if (appsSide === wantSystray) problems.push(`apps menu on ${appsSide}, expected the opposite side to the systray`);
+  }
+
+  // Seam B/C — sibling order reverses: left-to-right reading order in LTR, right-to-left in RTL.
+  const orderOf = xs => xs.length < 2 ? 'n/a'
+    : (xs.every((v, i) => i === 0 || v > xs[i - 1]) ? 'increasing'
+      : xs.every((v, i) => i === 0 || v < xs[i - 1]) ? 'decreasing' : 'mixed');
+  const wantOrder = wantRtl ? 'decreasing' : 'increasing';
+  const cellOrder = orderOf(list.cells);
+  if (cellOrder !== wantOrder) problems.push(`list cells ${cellOrder}, expected ${wantOrder} (${list.cells.map(Math.round).join(',')})`);
+  const cardOrder = orderOf(kanban.cards);
+  if (cardOrder !== wantOrder) problems.push(`kanban cards ${cardOrder}, expected ${wantOrder} (${kanban.cards.map(Math.round).join(',')})`);
+
+  // Seam D — form label and field swap sides.
+  if (form.label === null || form.field === null) {
+    problems.push('form: label or field not found');
+  } else {
+    const labelFirst = form.label < form.field;         // label left of field == LTR
+    if (labelFirst === wantRtl) {
+      problems.push(`form label=${Math.round(form.label)} field=${Math.round(form.field)} — label is ${labelFirst ? 'left' : 'right'} of field, expected the reverse`);
+    }
+  }
 
   await browser.close();
   if (problems.length) {

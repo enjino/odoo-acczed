@@ -5,11 +5,12 @@ identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
 **Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete,
 **ACC-F04** has been pulled forward and shipped (the site no longer overclaims), and phase **E** is
-under way with **ACC-E01** and **ACC-E02** done (rtlcss installed and proved mirroring; `ar_001` active
-with translations loaded, verified RTL in a browser). Every fact quoted in these tasks was verified
-from the live code and the running database on 2026-09-14, with a `file:line` reference so it can be
-re-checked. **Next up: ACC-E03 (verify RTL visuals)** — `tools/verify-rtl.sh` already covers its
-step 1.
+under way with **ACC-E01, E02 and E03** done — rtlcss installed and proved mirroring, `ar_001` active
+with translations loaded, and the layout verified as genuinely mirrored across four measured seams.
+Every fact quoted in these tasks was verified from the live code and the running database on
+2026-09-14, with a `file:line` reference so it can be re-checked. **Next up: ACC-E04 (translate our own
+strings).** Note that **ACC-E03's SCSS direction audit moved to ACC-C01**, which is where the first
+SCSS actually exists.
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -104,7 +105,7 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 |---|---|---|---|---|
 | [ACC-E01](E-arabic-rtl/ACC-E01-install-rtlcss.md) | Install rtlcss (required for any RTL stylesheet) | ACC-B04 | 20 min | ✅ |
 | [ACC-E02](E-arabic-rtl/ACC-E02-activate-arabic-language.md) | Activate Arabic (ar_001) | ACC-E01 | 15 min | ✅ |
-| [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ⏳ |
+| [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ✅ |
 | [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ⏳ |
 | [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together | ACC-E03 | 3 hrs | ⏳ |
 | [ACC-E06](E-arabic-rtl/ACC-E06-update-site-arabic-claim.md) | Make the site's Arabic claim true (or stop making it) — **subsumed by ACC-F04, do not execute** | ACC-E03 | 1 hr | 🅿️ |

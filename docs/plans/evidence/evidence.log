@@ -216,3 +216,12 @@
 2026-09-15 | directional counts, LTR vs RTL bundle | margin-left 339->250, margin-right 250->339, padding-left 295->267, padding-right 266->294  => rtlcss genuinely mirrored. ACC-E01 step 3 CLOSED.
 2026-09-15 | grep -ci rtlcss logs/odoo.log | 0 on a WORKING install — Odoo logs rtlcss only on failure (assetsbundle.py:665-674), so E01's original "grep the log" check was unfalsifiable. Replaced with the bundle comparison above.
 2026-09-15 | NOTE | the portal's server-rendered <html dir> is NOT curl-checkable: it reads request.env.lang, and a curl session that never runs the webclient's session_info RPC keeps a stale en_US context. Measured dir=ltr by curl for the same user a browser rendered dir=rtl.
+
+# --- ACC-E03 verify RTL visuals ---
+2026-09-15 | node tools/rtl-browser-check.js --expect rtl (arabic_test) | chrome systray=112 (left) appsMenu=1576 (right) ; list cells 1540,1239,707 (decreasing) ; kanban cards 1202,861,520 (decreasing) ; form label=1555 > field=305
+2026-09-15 | node tools/rtl-browser-check.js --expect ltr (admin) | chrome systray=1481 (right) appsMenu=24 (left) ; list cells 60,347,822 (increasing) ; kanban cards 399,740,1081 (increasing) ; form label=47 < field=1294
+2026-09-15 | FALSIFIABILITY | arabic_test run with --expect ltr reports a problem on ALL EIGHT assertions and exits 1. E03 verifies behaviour that ACC-E02 already created, so there is no red->green cycle to run; this is the substitute — every seam demonstrated capable of failing.
+2026-09-15 | bash tools/verify-rtl.sh | 9 passed, 0 failed
+2026-09-15 | node tools/shot.js (arabic_test) | after-backend-ar-list.png 37102 B ; after-backend-ar-form.png 64630 B ; after-backend-ar-kanban.png 199338 B — all three OPENED and inspected: Arabic labels (المستخدمون/الاسم/تسجيل الدخول/الدور), columns mirrored, systray left, form labels right of fields
+2026-09-15 | DECISION | E03 step 3 (SCSS direction audit) MOVED to ACC-C01. acczed_theme has no static/src/scss/ until C01 creates it, so running the grep now would pass on an empty directory — a green result meaning nothing. C01's Done-when now carries the check.
+2026-09-15 | NOT VERIFIED | icon mirroring ("no flipped arrows"). FontAwesome is patched for RTL (fontawesome_overridden.scss:77) and the pager glyphs were inspected by eye, but there is no automated check — directional and decorative glyphs are not reliably distinguishable from the DOM. Recorded as inspected, not verified.

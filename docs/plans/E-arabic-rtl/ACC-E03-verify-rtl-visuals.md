@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | E — Arabic and RTL |
-| **Status** | ⏳ not started |
+| **Status** | ✅ done 2026-09-15 — four layout seams asserted and falsified; screenshots captured |
 | **Depends on** | ACC-E02 |
 | **Estimated** | 2 hrs |
 | **Touches** | `docs/plans/evidence/` |
@@ -40,22 +40,65 @@ An Arabic interface is not finished when the words change — it is finished whe
 > comes from `request.env.lang`, and a curl session that never runs the webclient's `session_info` RPC
 > keeps a stale `en_US` context. Measured: curl reported `dir=ltr` for the same user a real browser
 > rendered as `dir=rtl`. Use the browser.
-- [ ] **2. Tour and screenshot the Arabic UI**
+- [x] **2. Tour and screenshot the Arabic UI** · **done 2026-09-15**
   ```bash
-  docs/plans/evidence/after-backend-ar-list.png
-  docs/plans/evidence/after-backend-ar-form.png
+  ACCZED_LOGIN=arabic_test ACCZED_PASSWORD=arabic_test node tools/shot.js \
+    "http://localhost:8069/odoo/action-base.action_res_users" \
+    docs/plans/evidence/after-backend-ar-list.png --login --wait ".o_list_view"
+  # likewise after-backend-ar-form.png (.o_form_view) and after-backend-ar-kanban.png (.o_kanban_view)
   ```
-  → expected: sidebar right, fields mirrored, no flipped arrows
-- [ ] **3. Audit our own stylesheets for direction bugs**
+  → expected: sidebar right, fields mirrored, no flipped arrows · **three screenshots captured and
+  inspected** (not just produced — see Risks). Arabic labels confirmed, columns mirrored, systray left.
+- [~] **3. Audit our own stylesheets for direction bugs — MOVED to ACC-C01** (2026-09-15)
   ```bash
-  cd ~/Desktop/Projects/acczed-addons && grep -rn "left:\|right:\|margin-left\|margin-right\|padding-left\|padding-right" acczed_theme/static/src/scss/ | grep -v "rtl:ignore"
+  # re-homed: it cannot run here. acczed_theme has no static/src/scss/ until ACC-C01 creates it, so
+  # the grep would pass on an empty directory and prove nothing.
   ```
-  → expected: no hits outside rtl:ignore cases
+  → see ACC-C01's Done-when, which now carries this check.
 
-  > ⚠️ **This passes vacuously today.** `acczed_theme` has no `static/` directory yet (it holds only
-  > `__manifest__.py`, `__init__.py`, `models/`, `views/`), and `static/src/scss/` is created by
-  > **ACC-C01**. Until C01 has run there is nothing to audit and a green result means nothing. Run this
-  > check after C01/C03, not before.
+## Verification
+
+- Three Arabic screenshots captured **and visually inspected** against the LTR baselines.
+- No directional property in our SCSS without an rtl:ignore justification — **deferred to ACC-C01**
+  (there is no SCSS yet; the check would be vacuous).
+- Dropdowns, chatter, kanban and the statusbar mirror correctly — covered by the geometry assertions
+  below, which measure real positions rather than eyeballing.
+- **`bash tools/verify-rtl.sh` → 9 passed, 0 failed.** The four E03 layout seams, each asserted for
+  both users with opposite expectations:
+
+  | Seam | LTR (admin) | RTL (arabic_test) |
+  |---|---|---|
+  | chrome: systray / apps menu | right (1481) / left (24) | **left (112) / right (1576)** |
+  | list: first 3 cell centres | 60, 347, 822 → increasing | **1540, 1239, 707 → decreasing** |
+  | kanban: first 3 card centres | 399, 740, 1081 → increasing | **1202, 861, 520 → decreasing** |
+  | form: label vs field | label 47 < field 1294 | **label 1555 > field 305** |
+
+- **Falsified, not merely passed.** This task verifies behaviour that already exists (ACC-E02), so
+  there is no red→green cycle to run. Instead each assertion was shown to be *capable* of failing:
+  running the suite as the Arabic user with `--expect ltr` reports a problem on **every one of the
+  eight assertions** and exits 1. An assertion that cannot fail proves nothing.
+
+## Done when
+
+- [x] RTL verified on list + form + one kanban
+- [x] direction audit of our SCSS clean → **moved to ACC-C01** rather than ticked vacuously here
+
+## Risks / notes
+
+- ⚠️ **A PNG existing proves nothing.** `shot.js` refuses to save when its `--wait` selector never
+  appears, which stops the empty-page failure mode, but it cannot tell you the *content* is right. All
+  three captures were opened and checked. Do not tick a screenshot task on file size alone.
+- **Chrome-side assertions use halves, not pixels.** `side(x, W) = x < W/2 ? left : right`. Pixel
+  comparison would break the moment Arabic text changes an element's width; the half test survives it.
+- **Sibling-order assertions require monotonicity, not exact positions.** Cells/cards are read as
+  increasing or decreasing across the first three elements; a layout that merely shifted everything
+  would not satisfy this, which is the point.
+- **Not asserted: icon mirroring** ("no flipped arrows"). FontAwesome is patched for RTL
+  (`fontawesome_overridden.scss:77`) and the pager glyphs were inspected by eye, but there is no
+  automated check — a directional glyph and a decorative one are not reliably distinguishable from
+  the DOM alone. Treat this as inspected, not verified.
+- The Arabic form still shows `Mitchell Admin`, `admin@example.com` and `555-555-5555` in Latin script —
+  correct, that is record data rather than UI strings. Our own module strings are ACC-E04's job.
 
 ## Verification
 
