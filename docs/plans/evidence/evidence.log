@@ -257,3 +257,11 @@
 2026-09-15 | KNOWN GAP | list-view row borders still rgb(222,226,230), a light grey on dark — not in C01's mapping, deferred to ACC-C03 as the most visible remaining light-theme artifact.
 2026-09-15 | node tools/shot.js | after-c01-backend-home.png (41765 B)
 2026-09-15 | direction audit (inherited from ACC-E03) | grep for left/right/margin-*/padding-* in acczed_theme/static/src/scss/ -> clean, no hits outside rtl:ignore
+
+# --- ACC-C02 make the dark bundle load by default ---
+2026-09-15 | grep -c assets_web_dark <(/odoo as admin) (BEFORE) | 0 refs ; page linked only web.assets_web.min.css and web.assets_web_print.min.css. Base color_scheme() returns hardcoded "light" (addons/web/models/ir_http.py:77).
+2026-09-15 | node tools/theme-check.js (BEFORE override) | new dark-bundle assertion FAILS ("web.assets_web_dark was not requested", exit 1) while C01's five colour assertions stay green -> the new assertion is specific to C02, not passing by accident.
+2026-09-15 | node tools/theme-check.js (AFTER override) | OK 7/7 ; dark bundle served /web/assets/67f00f4/web.assets_web_dark.min.css
+2026-09-15 | curl -b "color_scheme=X" /odoo, counting assets_web_dark refs | absent->1 (default dark) ; light->0 (opt-out WORKS) ; dark->1 ; chartreuse->1 (unrecognised fails safe to dark)
+2026-09-15 | DECISION | C02 reads the cookie instead of `return 'dark'`. The bundle is chosen server-side and the cookie is read for it nowhere in community, so a bare hardcode would have made C04's toggle silently do nothing: write cookie, reload, server says dark again. This is NOT the rejected "follow the system preference" variant — nothing reads prefers-color-scheme; only our own cookie is honoured.
+2026-09-15 | KNOWN STATE | until ACC-C04 lands nothing writes the cookie, so the light branch is unreachable in normal use. Intended default, not a gap; the branch is exercised only by the curl check above.
