@@ -51,3 +51,10 @@ package.json
 /man/
 /share/
 /src/
+
+# local run state — run-odoo.sh recreates both (ACC-E01)
+#   the log is append-only and grows without bound, so it must not enter history;
+#   the pid files change on every restart and would conflict on every commit.
+# logs/.gitkeep keeps the directory itself tracked, so it survives a re-clone.
+logs/*.log
+logs/*.pid
