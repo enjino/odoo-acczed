@@ -42,6 +42,10 @@ const EXPECTED = [
   ['navbar background', '.o_main_navbar', 'background-color', 'rgb(16, 23, 32)',   '#101720 --bg-soft'],
   ['primary button bg', '.btn-primary',  'background-color', 'rgb(57, 211, 83)',  '#39d353 --glow'],
   ['primary button fg', '.btn-primary',  'color',            'rgb(13, 17, 23)',   '#0d1117 on --glow (12:1)'],
+  // ACC-C03 wave 1. Bootstrap's #dee2e6 borders were the last light-theme artifact in the chrome;
+  // these two come from different variables, which is why they are asserted separately.
+  ['row cell border',   '.o_data_row td',     'border-bottom-color', 'rgb(31, 42, 55)', '#1f2a37 --border'],
+  ['panel border',      '.o_control_panel',   'border-bottom-color', 'rgb(31, 42, 55)', '#1f2a37 --border'],
 ];
 
 (async () => {
