@@ -53,19 +53,45 @@ Ours goes **first**, so a fork module of the same name cannot shadow a product m
 **Verify:** the backup exists, and the line has no spaces:
 `grep '^addons_path' /opt/odoo-acczed/odoo.conf | grep -q ' ' && echo "SPACE — fix it"`
 
-### 3. Ensure rtlcss is on the services' PATH (phase E)
+### 3. Install rtlcss and put it on the services' PATH (phase E)
+
+Odoo mirrors RTL stylesheets by spawning the **bare command name** `rtlcss` — it is resolved through
+PATH and nothing else, so a binary that exists but is not on the service user's PATH is invisible
+(`odoo/addons/base/models/assetsbundle.py:654-661`: `cmd = [rtlcss, '-c', file_path("base/data/rtlcss.json"), '-']`).
 
 ```bash
-# Must be visible to the *service user*, not just an interactive root shell — systemd does not
-# inherit your login PATH.
-sudo systemctl edit odoo-http     # and odoo-gevent
+# 0. rtlcss needs node. Unverified on the droplet as of ACC-E01 — check first.
+node --version                      # expect v22.x; install nodejs+npm if absent
+
+# 1. install system-wide, so it lands somewhere already on a sane PATH
+sudo npm i -g rtlcss
+command -v rtlcss                    # expect /usr/local/bin/rtlcss
+
+# 2. make the install directory visible to the *service user*.
+#    systemd does not inherit your login PATH.
+sudo systemctl edit odoo-http        # and odoo-gevent
 # add:
 #   [Service]
-#   Environment=PATH=/usr/local/bin:/usr/bin:/bin
+#   Environment=PATH=/usr/local/bin:/usr/bin:/bin    # must contain `command -v rtlcss` from step 1
 ```
 
-**Verify:** `sudo -u odoo env PATH=/usr/local/bin:/usr/bin:/bin which rtlcss` prints a path.
-Without this, Arabic asset mirroring fails *at runtime* while every other step looks green.
+**Verify:**
+
+```bash
+sudo -u odoo env PATH=/usr/local/bin:/usr/bin:/bin which rtlcss   # prints a path
+sudo systemctl show odoo-http -p Environment | tr ' ' '\n' | grep PATH
+```
+
+> ⚠️ **The failure is silent.** If rtlcss cannot be spawned, Odoo logs
+> `You need https://rtlcss.com/ … Use: npm install -g rtlcss` **at WARNING level and returns the
+> un-mirrored LTR source** (`assetsbundle.py:665-674`) — the page still renders, the assets still
+> compile, and no `ERROR` line appears. The only symptom is Arabic laid out left-to-right.
+> So verify the two commands above rather than trusting "the site loads".
+
+> ⚠️ **The mirrored CSS is cached.** `preprocess_css` writes the rtlcss output to `ir.attachment` and
+> reuses it (`assetsbundle.py:570-595`). Installing rtlcss *after* a bundle was already compiled under
+> RTL leaves the un-mirrored version cached — invalidate assets after the install
+> (`-u acczed_theme` in step 4 does this, or Settings → Technical → Assets → regenerate).
 
 ### 4. Install or upgrade the module
 

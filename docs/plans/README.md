@@ -3,10 +3,13 @@
 All planning for this product lives in this folder. One file per task, one folder per phase, and the
 identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
-**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete, and
-**ACC-F04** has been pulled forward and shipped (the site no longer overclaims). Every fact quoted in
-these tasks was verified from the live code and the running database on 2026-09-14, with a `file:line`
-reference so it can be re-checked. **Next up: phase E (Arabic and RTL).**
+**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete,
+**ACC-F04** has been pulled forward and shipped (the site no longer overclaims), and phase **E** is
+under way with **ACC-E01** and **ACC-E02** done (rtlcss installed and proved mirroring; `ar_001` active
+with translations loaded, verified RTL in a browser). Every fact quoted in these tasks was verified
+from the live code and the running database on 2026-09-14, with a `file:line` reference so it can be
+re-checked. **Next up: ACC-E03 (verify RTL visuals)** — `tools/verify-rtl.sh` already covers its
+step 1.
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -24,7 +27,7 @@ reference so it can be re-checked. **Next up: phase E (Arabic and RTL).**
 | **B** | [B-scaffolding/](B-scaffolding/) | Scaffolding (module repo + addons path) — A separate acczed-addons repo, a third addons path, and an empty module that installs green. | acczed_theme shows installed in SQL, with zero visual change | ✅ done |
 | **C** | [C-dark-theme/](C-dark-theme/) | Dark Space Botanical backend theme — Repaint the backend from one variable layer, make dark the default, cover what variables miss. | dark on first load, zero SCSS errors, explicit list of uncovered screens | ⏳ |
 | **D** | [D-branding/](D-branding/) | Branding (title, favicon, login, company, mail) — Remove every customer-visible trace of the upstream brand. | no odoo.com or Manage Databases on the login page, company renamed | ⏳ |
-| **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH | ⏳ |
+| **E** | [E-arabic-rtl/](E-arabic-rtl/) | Arabic and RTL — Make the site's Arabic/RTL badges true: rtlcss, ar_001, verified mirror layout. | ar_001 active, dir=rtl verified, rtlcss installed and on the service PATH | 🚧 |
 | **F** | [F-token-sync/](F-token-sync/) | Single token source + site copy parity — One tokens.json generating both surfaces, and marketing copy audited against reality. | one token change reaches both surfaces, no unsupported live badge | ⏳ |
 | **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented | 🅿️ |
 | **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode | ⏳ |
@@ -99,8 +102,8 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
-| [ACC-E01](E-arabic-rtl/ACC-E01-install-rtlcss.md) | Install rtlcss (required for any RTL stylesheet) | ACC-B04 | 20 min | ⏳ |
-| [ACC-E02](E-arabic-rtl/ACC-E02-activate-arabic-language.md) | Activate Arabic (ar_001) | ACC-E01 | 15 min | ⏳ |
+| [ACC-E01](E-arabic-rtl/ACC-E01-install-rtlcss.md) | Install rtlcss (required for any RTL stylesheet) | ACC-B04 | 20 min | ✅ |
+| [ACC-E02](E-arabic-rtl/ACC-E02-activate-arabic-language.md) | Activate Arabic (ar_001) | ACC-E01 | 15 min | ✅ |
 | [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ⏳ |
 | [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ⏳ |
 | [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together | ACC-E03 | 3 hrs | ⏳ |
