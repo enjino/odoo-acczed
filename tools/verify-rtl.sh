@@ -204,13 +204,33 @@ seam_i18n() {
   esac
 }
 
+# --- seam 6: reports must not fetch fonts from a third party --------------------------------------
+#
+# Odoo's report bundle points the Arabic face at https://fonts.odoocdn.com
+# (addons/web/static/fonts/fonts.scss:27-36). acczed_theme re-points the stack at a self-hosted
+# family. Because the CDN @font-face remains *declared* in the bundle, this cannot be checked by
+# grepping the CSS for the URL — it is about use, not presence, so it is checked in a browser.
+
+seam_fonts() {
+  say "Seam 6 — reports fetch no third-party font (ACC-E05)"
+  local script="$HERE/report-font-check.js"
+  local out rc=0
+  out=$(node "$script" --base "$BASE" 2>&1) || rc=$?
+  if [ "$rc" -eq 0 ]; then
+    ok "$(printf '%s' "$out" | grep -E '^stack:|^off-instance' | tr '\n' ' ')"
+  else
+    no "$(printf '%s' "$out" | tail -1)"
+  fi
+}
+
 # --- report --------------------------------------------------------------------------------------
 
-say "ACC-E02/E03/E04 verification — $BASE (db $DB)"
+say "ACC-E02–E05 verification — $BASE (db $DB)"
 want 1 && seam1
 want 2 && seam_browser
 want 4 && seam_config
 want 5 && seam_i18n
+want 6 && seam_fonts
 
 printf '\n\033[1m%d passed, %d failed\033[0m\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

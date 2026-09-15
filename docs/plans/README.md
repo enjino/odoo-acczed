@@ -3,21 +3,27 @@
 All planning for this product lives in this folder. One file per task, one folder per phase, and the
 identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
-**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete,
-**ACC-F04** has been pulled forward and shipped (the site no longer overclaims), and phase **E** is
-under way with **ACC-E01–E04 done** — rtlcss installed and proved mirroring, `ar_001` active with
-translations loaded, the layout verified as genuinely mirrored across four measured seams, and the
-translation-coverage check built and wired into the harness. Every fact quoted in these tasks was
-verified from the live code and the running database on 2026-09-14, with a `file:line` reference so it
-can be re-checked.
+**Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete, **ACC-F04**
+has been pulled forward and shipped (the site no longer overclaims), and **phase E is complete** —
+rtlcss installed and proved mirroring, `ar_001` active with translations loaded, the layout verified as
+genuinely mirrored across four measured seams, the translation-coverage check built, and reports taken
+off Odoo's font CDN. Every fact quoted in these tasks was verified from the live code and the running
+database on 2026-09-14, with a `file:line` reference so it can be re-checked.
 
-**Two E tasks closed on a mechanism rather than the work their titles imply — read the status lines:**
+**Phase E's gate is met:** `ar_001` active, `dir=rtl` verified, rtlcss installed and on the PATH — the
+last of those still holds **locally only**; the production half is written into the ACC-B07 runbook and
+not yet executed.
+
+**Three E tasks closed on something other than what their titles imply — read the status lines before
+citing them as done:**
 - **ACC-E03's SCSS direction audit moved to ACC-C01**, which is where the first SCSS actually exists.
 - **ACC-E04 translated nothing.** `acczed_theme` authors zero user-visible strings (a 0-byte POT), so
-  what closed is the *check*; translating is now a per-task duty under CONVENTIONS §8, and the first
-  strings arrive with phase D.
+  what closed is the *check*; translating is now a per-task duty under CONVENTIONS §8.
+- **ACC-E05 was re-scoped.** Its stated job (backend Inter stack) described a problem that did not
+  exist; the real one was reports fetching Arabic glyphs from `fonts.odoocdn.com`.
 
-**Next up: ACC-E05 (Arabic font stack)** — but it cannot run as sequenced; see the open conflict below.
+**Next up: phase C (Dark Space Botanical backend theme), starting at ACC-C01** — which now also carries
+E03's re-homed SCSS direction audit.
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -56,22 +62,23 @@ A → B → F04 (soften the false badges) → E → C → D → F (F01–F03, F0
 ACC-F04's remaining trigger is decision 4's second half — flipping the badges *back* to `live` — which
 happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 
-### ⚠️ Open conflict: ACC-E05 vs ACC-C01 (raised 2026-09-15)
+### ✅ Resolved: ACC-E05 vs ACC-C01 (raised and closed 2026-09-15)
 
-**The documented order cannot be executed as written.** ACC-E05 *touches* `_acczed_variables.scss`, but
-that file is **created** by ACC-C01 (`…/static/src/scss/_acczed_variables.scss (new)`), and the order
-above runs E before C. E05 therefore has nothing to edit when its turn comes.
+**Was:** the documented order could not be executed — ACC-E05 *touched* `_acczed_variables.scss`, which
+ACC-C01 **creates**, and the order runs E before C.
 
-Not resolved here — it is a plan decision, and there are two coherent answers:
+**Resolved by re-scoping E05, not by reordering.** Reconnaissance showed E05's real problem was
+elsewhere entirely (reports fetching Arabic glyphs from `fonts.odoocdn.com`, see ACC-E05), and the fix
+landed in a **new file** scoped to `web.report_assets_common`. E05 no longer touches
+`_acczed_variables.scss` at all, so the conflict disappeared rather than needing a decision.
 
-1. **E05 creates the file and C01 adopts it.** E05 adds the font stack to a new
-   `_acczed_variables.scss`; C01 then adds the colour variables to the file it finds. Keeps E before C.
-2. **Move ACC-C01 ahead of ACC-E05.** C01 is the variable layer; E05 is one more variable in it. This
-   contradicts "E before C because an Arabic tour of a theme is cheaper than a theme tour twice" — but
-   that reasoning was about *screenshotting*, not about who owns the variable file.
+**The lesson worth keeping:** the conflict was a symptom. Two tasks were fighting over a file because
+one of them was doing the wrong work. Chasing the symptom — picking option 1 or 2 above — would have
+resolved the ordering and left the actual CDN leak in place. When two tasks contend for the same
+artifact, check whether either should be there at all before reordering them.
 
-Whichever is chosen, record it here and update both task files' `Depends on` — they currently disagree
-with the stated order.
+**Still open for ACC-C01:** its `Depends on` and `Done when` are unchanged and correct; it owns
+`_acczed_variables.scss` outright, and carries E03's re-homed direction audit.
 
 ---
 
@@ -131,7 +138,7 @@ with the stated order.
 | [ACC-E02](E-arabic-rtl/ACC-E02-activate-arabic-language.md) | Activate Arabic (ar_001) | ACC-E01 | 15 min | ✅ |
 | [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ✅ |
 | [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ✅ |
-| [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together | ACC-E03 | 3 hrs | ⏳ |
+| [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together (**re-scoped**: self-host the report font) | ACC-E03 | 3 hrs | ✅ |
 | [ACC-E06](E-arabic-rtl/ACC-E06-update-site-arabic-claim.md) | Make the site's Arabic claim true (or stop making it) — **subsumed by ACC-F04, do not execute** | ACC-E03 | 1 hr | 🅿️ |
 
 ### Phase F — Single token source + site copy parity
