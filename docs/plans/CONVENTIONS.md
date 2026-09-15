@@ -105,6 +105,11 @@ Update the status **in the phase table of `README.md` and in the task header** â
 A task is not done until all four hold:
 
 - [ ] Behaviour verified by a command (SQL query, HTTP route, or a test) whose output is recorded.
-- [ ] Arabic check: new strings in `i18n/ar.po`, new SCSS respects RTL.
+- [ ] Arabic check: new strings in `i18n/ar.po`, new SCSS respects RTL. **Mechanised by
+      `bash tools/verify-rtl.sh --check 5`** (added by ACC-E04, 2026-09-15) â€” it exports the module's
+      terms with Odoo's own extractor and fails, naming each string, when one has no Arabic
+      translation. It reports **VACUOUS, not PASS**, when a module authors no strings at all, so an
+      empty module cannot read as a green tick. The SCSS half of this check is the directional-property
+      grep in ACC-C01's Done-when.
 - [ ] Screenshot in `evidence/` if anything visible changed.
 - [ ] Zero modifications under the fork's `addons/` tree.
