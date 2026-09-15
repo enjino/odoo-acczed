@@ -98,6 +98,24 @@ const EXPECTED = [
     console.log('  ok   no SCSS error rendered into the bundle');
   }
 
+  // ACC-C02 — the dark bundle must actually be served. The server picks it in `ir.http.color_scheme()`
+  // (addons/web/models/ir_http.py:77) and the template emits it only when that returns 'dark'
+  // (webclient_templates.xml:300-305), so a themed variable layer alone does NOT mean the dark
+  // bundle is in play. Observed via resource timing rather than by grepping HTML, because what
+  // matters is that the browser fetched it.
+  const dark = await page.evaluate(() => {
+    const urls = performance.getEntriesByType('resource').map(e => e.name)
+      .concat([...document.styleSheets].map(s => s.href || ''));
+    const hits = urls.filter(u => u.includes('assets_web_dark'));
+    return { hit: hits.length > 0, sample: hits[0] || null };
+  });
+  if (dark.hit) {
+    console.log(`  ok   dark bundle served       ${String(dark.sample).replace(/^https?:\/\/[^/]+/, '').slice(0, 62)}`);
+  } else {
+    console.log('  BAD  dark bundle not served   web.assets_web_dark was never fetched (ACC-C02)');
+    problems.push('web.assets_web_dark was not requested — color_scheme() is not returning dark');
+  }
+
   await browser.close();
   if (problems.length) {
     console.error('MISMATCH: ' + problems.join(' ; '));
