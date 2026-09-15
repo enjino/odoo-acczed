@@ -133,6 +133,29 @@ definition of "translatable" cannot drift from Odoo's.
 coverage, untranslated multi-line `msgid`). That is the point: a check that has never been seen to fail
 is indistinguishable from one that cannot.
 
+## `report-font-check.js` — reports must not fetch fonts from a third party
+
+```bash
+node tools/report-font-check.js          # exit 1 if any request leaves the instance
+```
+
+Called by `verify-rtl.sh --check 6`. Odoo's report bundle declares the Arabic face at
+`https://fonts.odoocdn.com` (`addons/web/static/fonts/fonts.scss:27-36`). Printed PDFs are rendered
+**server-side**, so an unreachable CDN means broken Arabic in a generated document — and for a product
+sold as self-hosted, a third-party request at all is the wrong shape.
+
+`acczed_theme` re-points the report font stack at a self-hosted family. The CDN `@font-face` stays
+*declared* in the bundle, so **this cannot be checked by grepping the CSS for the URL** — it is about
+*use*, not presence. The tool therefore logs in, loads a report, renders Arabic through the report's own
+stack, and counts requests that leave the origin.
+
+> **Do not try to fix this with an appended `@font-face`.** Measured in Chromium three times: with a
+> second declaration of the same family, weight and unicode-range, the browser fetches **both**
+> sources. Odoo's declaration cannot be out-voted — only left unreferenced.
+
+> **Do not delete `fonts.scss` from the bundle either.** Report bodies use `'Lato'`
+> (`…/reports/report.scss:16`), so removing the file drops Lato from reports too.
+
 ## Four traps these tools exist to avoid
 
 1. **`<html dir="rtl">` is not where RTL shows up in the backend.** Measured on a working install:
