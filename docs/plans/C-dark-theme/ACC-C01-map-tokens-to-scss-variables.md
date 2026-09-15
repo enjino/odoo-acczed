@@ -58,6 +58,20 @@ Repaint the whole backend from one variable layer instead of styling component b
 
 - [ ] variable layer in place and loaded after Odoo's own
 - [ ] screenshot `after-c01-backend-home.png` captured
+- [ ] **direction audit clean** — inherited from ACC-E03 (2026-09-15), which could not run it because
+      this task is what creates the directory it audits:
+  ```bash
+  cd ~/Desktop/Projects/acczed-addons && grep -rn "left:\|right:\|margin-left\|margin-right\|padding-left\|padding-right" acczed_theme/static/src/scss/ | grep -v "rtl:ignore"
+  ```
+  → expected: no hits outside `rtl:ignore` cases. This is ACC-CONVENTIONS rule 6 ("no hardcoded
+  left/right in SCSS — logical properties or `/*rtl:ignore*/`"), and it is the first point at which
+  the rule has any SCSS to apply to. Run it **after** this task writes its first stylesheet, or it
+  audits an empty directory and passes for the wrong reason.
+
+  Context for why it matters: RTL mirroring is produced by spawning `rtlcss` over every stylesheet
+  (ACC-E01), and `rtlcss` flips physical properties but cannot guess intent. A hand-written
+  `margin-left` that meant "leading edge" will be mirrored into the wrong place unless it is written
+  as a logical property or explicitly opted out.
 
 ---
 ← Phase C index: [../README.md](../README.md)

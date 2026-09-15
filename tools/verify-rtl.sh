@@ -121,7 +121,8 @@ seam_browser() {
 
   if ACCZED_LOGIN="$AR_LOGIN" ACCZED_PASSWORD="$AR_PASSWORD" \
        node "$script" --expect rtl --base "$BASE" >/tmp/rtl-ar.out 2>&1; then
-    ok "arabic: $(grep -E '^backend|^portal' /tmp/rtl-ar.out | tr '\n' ' ')"
+    ok "arabic: $(grep -E '^portal|^chrome' /tmp/rtl-ar.out | tr '\n' ' ')"
+    ok "arabic layout: $(grep -E '^list|^kanban|^form' /tmp/rtl-ar.out | tr '\n' ' ')"
   else
     no "arabic user is not RTL in a browser — $(tail -1 /tmp/rtl-ar.out)"
   fi
@@ -130,7 +131,8 @@ seam_browser() {
   # theme that forces RTL for everyone.
   if ACCZED_LOGIN="$EN_LOGIN" ACCZED_PASSWORD="$EN_PASSWORD" \
        node "$script" --expect ltr --base "$BASE" >/tmp/rtl-en.out 2>&1; then
-    ok "english control: $(grep -E '^backend|^portal' /tmp/rtl-en.out | tr '\n' ' ')"
+    ok "english control: $(grep -E '^portal|^chrome' /tmp/rtl-en.out | tr '\n' ' ')"
+    ok "english layout: $(grep -E '^list|^kanban|^form' /tmp/rtl-en.out | tr '\n' ' ')"
   else
     no "english control is RTL — RTL is being forced on everyone — $(tail -1 /tmp/rtl-en.out)"
   fi

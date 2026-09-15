@@ -94,6 +94,23 @@ Logs in the way `shot.js` does, then reads the live DOM on `/odoo` and `/my/home
 same code check both directions, so one script proves the Arabic user is RTL *and* that an English user
 is not.
 
+### The four ACC-E03 layout seams
+
+`direction: rtl` alone only reorders inline text — it does not prove the page *mirrors*. These read real
+geometry from a real browser, and each is written so the LTR and RTL expectations are **opposite**,
+which is what makes the pair falsifiable:
+
+| Seam | Measured as | LTR | RTL |
+|---|---|---|---|
+| chrome sides | `.o_menu_systray` / `.o_navbar_apps_menu` horizontal half | systray right, apps left | **reversed** |
+| list order | first 3 `.o_data_cell` centres monotonic | increasing | **decreasing** |
+| kanban order | first 3 `.o_kanban_record` centres monotonic | increasing | **decreasing** |
+| form sides | `.o_form_label` vs `.o_field_widget` | label left of field | **label right of field** |
+
+Two deliberate choices: sides are asserted **by half (`x < W/2`), not by pixel**, so a change in Arabic
+text length cannot break it; and sibling order is asserted as **monotonicity**, so a layout that merely
+shifted everything sideways would not satisfy it.
+
 ## Four traps these tools exist to avoid
 
 1. **`<html dir="rtl">` is not where RTL shows up in the backend.** Measured on a working install:
