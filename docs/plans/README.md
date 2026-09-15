@@ -5,12 +5,19 @@ identifier scheme is `ACC-<phase><NN>` (see [CONVENTIONS.md](CONVENTIONS.md)).
 
 **Session mode:** execution. Phases **A (baseline)** and **B (scaffolding)** are complete,
 **ACC-F04** has been pulled forward and shipped (the site no longer overclaims), and phase **E** is
-under way with **ACC-E01, E02 and E03** done — rtlcss installed and proved mirroring, `ar_001` active
-with translations loaded, and the layout verified as genuinely mirrored across four measured seams.
-Every fact quoted in these tasks was verified from the live code and the running database on
-2026-09-14, with a `file:line` reference so it can be re-checked. **Next up: ACC-E04 (translate our own
-strings).** Note that **ACC-E03's SCSS direction audit moved to ACC-C01**, which is where the first
-SCSS actually exists.
+under way with **ACC-E01–E04 done** — rtlcss installed and proved mirroring, `ar_001` active with
+translations loaded, the layout verified as genuinely mirrored across four measured seams, and the
+translation-coverage check built and wired into the harness. Every fact quoted in these tasks was
+verified from the live code and the running database on 2026-09-14, with a `file:line` reference so it
+can be re-checked.
+
+**Two E tasks closed on a mechanism rather than the work their titles imply — read the status lines:**
+- **ACC-E03's SCSS direction audit moved to ACC-C01**, which is where the first SCSS actually exists.
+- **ACC-E04 translated nothing.** `acczed_theme` authors zero user-visible strings (a 0-byte POT), so
+  what closed is the *check*; translating is now a per-task duty under CONVENTIONS §8, and the first
+  strings arrive with phase D.
+
+**Next up: ACC-E05 (Arabic font stack)** — but it cannot run as sequenced; see the open conflict below.
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -48,6 +55,23 @@ A → B → F04 (soften the false badges) → E → C → D → F (F01–F03, F0
 
 ACC-F04's remaining trigger is decision 4's second half — flipping the badges *back* to `live` — which
 happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
+
+### ⚠️ Open conflict: ACC-E05 vs ACC-C01 (raised 2026-09-15)
+
+**The documented order cannot be executed as written.** ACC-E05 *touches* `_acczed_variables.scss`, but
+that file is **created** by ACC-C01 (`…/static/src/scss/_acczed_variables.scss (new)`), and the order
+above runs E before C. E05 therefore has nothing to edit when its turn comes.
+
+Not resolved here — it is a plan decision, and there are two coherent answers:
+
+1. **E05 creates the file and C01 adopts it.** E05 adds the font stack to a new
+   `_acczed_variables.scss`; C01 then adds the colour variables to the file it finds. Keeps E before C.
+2. **Move ACC-C01 ahead of ACC-E05.** C01 is the variable layer; E05 is one more variable in it. This
+   contradicts "E before C because an Arabic tour of a theme is cheaper than a theme tour twice" — but
+   that reasoning was about *screenshotting*, not about who owns the variable file.
+
+Whichever is chosen, record it here and update both task files' `Depends on` — they currently disagree
+with the stated order.
 
 ---
 
@@ -106,7 +130,7 @@ happens per-claim as ACC-G03 / ACC-E03 land, not in one pass.
 | [ACC-E01](E-arabic-rtl/ACC-E01-install-rtlcss.md) | Install rtlcss (required for any RTL stylesheet) | ACC-B04 | 20 min | ✅ |
 | [ACC-E02](E-arabic-rtl/ACC-E02-activate-arabic-language.md) | Activate Arabic (ar_001) | ACC-E01 | 15 min | ✅ |
 | [ACC-E03](E-arabic-rtl/ACC-E03-verify-rtl-visuals.md) | Verify RTL actually renders right | ACC-E02 | 2 hrs | ✅ |
-| [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ⏳ |
+| [ACC-E04](E-arabic-rtl/ACC-E04-translate-module-strings.md) | Translate our own strings (i18n/ar.po) | ACC-E02 | half a day | ✅ |
 | [ACC-E05](E-arabic-rtl/ACC-E05-arabic-font-stack.md) | Font stack for Arabic and Latin together | ACC-E03 | 3 hrs | ⏳ |
 | [ACC-E06](E-arabic-rtl/ACC-E06-update-site-arabic-claim.md) | Make the site's Arabic claim true (or stop making it) — **subsumed by ACC-F04, do not execute** | ACC-E03 | 1 hr | 🅿️ |
 

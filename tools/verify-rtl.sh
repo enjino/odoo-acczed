@@ -25,6 +25,13 @@ AR_LOGIN="${ACCZED_AR_LOGIN:-arabic_test}"
 AR_PASSWORD="${ACCZED_AR_PASSWORD:-arabic_test}"
 ONLY="${2:-}"
 
+# For seam 5 (i18n coverage), which shells out to odoo-bin.
+REPO="${ACCZED_REPO:-$HOME/Desktop/Projects/odoo-acczed}"
+VENV="${ACCZED_VENV:-$HOME/Desktop/Projects/odoo-acczed-venv/.venv}"
+CONF="${ACCZED_CONF:-$REPO/odoo.conf}"
+MODULE="${ACCZED_MODULE:-acczed_theme}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+
 PASS=0; FAIL=0
 ok()  { printf '  \033[32mPASS\033[0m  %s\n' "$1"; PASS=$((PASS+1)); }
 no()  { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; FAIL=$((FAIL+1)); }
@@ -163,12 +170,47 @@ seam_config() {
   [ "$dir" = "rtl" ] && ok "ar_001 direction = rtl" || no "ar_001 direction = '$dir'"
 }
 
+# --- seam 5: do the strings WE authored carry an Arabic translation? ------------------------------
+#
+# Odoo ships Arabic for its own labels; anything acczed_theme invents is ours to translate. The term
+# list comes from Odoo's own extractor (`i18n export -l pot`) rather than a grep of ours, so "what
+# counts as a translatable string" is Odoo's definition and cannot drift from it.
+
+seam_i18n() {
+  say "Seam 5 — authored strings carry an Arabic translation (ACC-E04)"
+  local pot=/tmp/acczed-i18n.pot po=/tmp/acczed-i18n-ar.po
+  rm -f "$pot" "$po"
+
+  local odoo=("$VENV/bin/python" "$REPO/odoo-bin" i18n export -c "$CONF" -d "$DB")
+  if ! env -u PYTHONPATH "${odoo[@]}" -l pot -o "$pot" "$MODULE" >/tmp/acczed-i18n-exp.log 2>&1; then
+    no "i18n export failed — $(tail -1 /tmp/acczed-i18n-exp.log)"
+    return
+  fi
+  # Exporting the language may produce nothing at all when the template is empty; the checker wants
+  # a readable file either way.
+  env -u PYTHONPATH "${odoo[@]}" -l ar -o "$po" "$MODULE" >/dev/null 2>&1
+  [ -f "$po" ] || : > "$po"
+
+  local out rc=0
+  out=$(python3 "$HERE/i18n-coverage.py" "$pot" "$po") || rc=$?
+  case "$rc" in
+    0) if printf '%s' "$out" | grep -q VACUOUS; then
+         ok "0 authored terms — nothing to translate yet (vacuous, not a pass)"
+       else
+         ok "$(printf '%s' "$out" | sed 's/^  PASS     //')"
+       fi ;;
+    1) no "$(printf '%s' "$out" | sed 's/^  FAIL     //' | tr '\n' ' ')" ;;
+    *) no "i18n-coverage.py failed: $out" ;;
+  esac
+}
+
 # --- report --------------------------------------------------------------------------------------
 
-say "ACC-E02 RTL verification — $BASE (db $DB)"
+say "ACC-E02/E03/E04 verification — $BASE (db $DB)"
 want 1 && seam1
 want 2 && seam_browser
 want 4 && seam_config
+want 5 && seam_i18n
 
 printf '\n\033[1m%d passed, %d failed\033[0m\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

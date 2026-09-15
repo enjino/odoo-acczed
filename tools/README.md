@@ -111,6 +111,28 @@ Two deliberate choices: sides are asserted **by half (`x < W/2`), not by pixel**
 text length cannot break it; and sibling order is asserted as **monotonicity**, so a layout that merely
 shifted everything sideways would not satisfy it.
 
+## `i18n-coverage.py` — do the strings we authored have Arabic?
+
+```bash
+python3 tools/i18n-coverage.py /tmp/x.pot /tmp/x.po   # exit 1 if any term is untranslated
+python3 tools/i18n-coverage.py --selftest             # proves the check can fail
+```
+
+Called by `verify-rtl.sh --check 5`. Odoo ships Arabic for its own labels; anything `acczed_theme`
+invents is ours. Without this an authored string silently stays English inside an otherwise-Arabic
+screen and **nothing fails** — which is why CONVENTIONS §8's Arabic check needed a mechanism rather
+than a reminder.
+
+The term list comes from Odoo's own extractor (`i18n export -l pot`), not a grep of ours, so its
+definition of "translatable" cannot drift from Odoo's.
+
+> **It reports `VACUOUS`, not `PASS`, when a module authors no strings** (which is `acczed_theme`'s
+> state today — a 0-byte POT). An empty module must not read as a green tick.
+
+`--selftest` runs 7 hand-written fixtures, three of which expect failure (untranslated term, partial
+coverage, untranslated multi-line `msgid`). That is the point: a check that has never been seen to fail
+is indistinguishable from one that cannot.
+
 ## Four traps these tools exist to avoid
 
 1. **`<html dir="rtl">` is not where RTL shows up in the backend.** Measured on a working install:

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | E — Arabic and RTL |
-| **Status** | ⏳ not started |
+| **Status** | ✅ done 2026-09-15 — **the mechanism, not a translation.** `acczed_theme` authors zero user-visible strings today (proved: a 0-byte POT), so there was nothing to translate. The check now exists and is wired into the harness; translating happens per-task under CONVENTIONS §8. |
 | **Depends on** | ACC-E02 |
 | **Estimated** | half a day |
 | **Touches** | `acczed-addons/acczed_theme/i18n/ar.po` |
@@ -14,39 +14,83 @@ Standard Odoo labels come with the Arabic translation; everything we invent has 
 
 ## Context (verified)
 
-- Module translations live in `i18n/ar.po` inside each module; export/import is done with the `--i18n-*` flags of odoo-bin.
+- Module translations live in `i18n/ar.po` inside each module.
+- ⚠️ **This file originally said export/import use "the `--i18n-*` flags of odoo-bin". That is Odoo ≤18
+  syntax and it does not work on this fork.** Measured 2026-09-15:
+  `odoo-bin ... --i18n-export=… ` → `error: no such option: --i18n-export`. Odoo 19 moved i18n to a
+  **subcommand** (`odoo/cli/i18n.py`):
+  ```bash
+  odoo-bin i18n export -c odoo.conf -d acczed -l pot -o /tmp/x.pot acczed_theme
+  odoo-bin i18n export -c odoo.conf -d acczed -l ar  -o /tmp/x.po  acczed_theme
+  odoo-bin i18n import -c odoo.conf -d acczed -l ar -w my.po
+  ```
+  `-l` takes a **locale, not an Odoo code**: for `ar_001` that is `ar` (`res_lang.iso_code`), because
+  the CLI's own help directs you to `SELECT iso_code FROM res_lang`. The old `--i18n-overwrite` option
+  still exists (`tools/config.py:409`) but errors unless combined with `-u`.
 
 ## Steps
 
-- [ ] **1. Generate the PO skeleton from the installed module**
+- [x] **1. Generate the POT from the installed module** · **done 2026-09-15 — and it is empty**
   ```bash
   cd ~/Desktop/Projects/odoo-acczed
-  env -u PYTHONPATH ~/Desktop/Projects/odoo-acczed-venv/.venv/bin/python odoo-bin -c odoo.conf -d acczed --i18n-export=/tmp/acczed_theme.pot --modules=acczed_theme --stop-after-init
+  env -u PYTHONPATH ~/Desktop/Projects/odoo-acczed-venv/.venv/bin/python odoo-bin i18n export \
+    -c odoo.conf -d acczed -l pot -o /tmp/acczed_theme.pot acczed_theme
   ```
-  → expected: POT file produced
-- [ ] **2. Translate and load back**
+  → expected: a POT file · **actual: `WARNING odoo.cli.i18n: No translatable terms were found in
+  ['acczed_theme']` and a 0-byte file.** Confirmed independently by grep: no `_(`, `string=`, `t-out`,
+  `title=`, `help=` or `placeholder=` anywhere in the module. `models/__init__.py` is empty and
+  `brand_templates.xml` is a placeholder comment.
+- [x] **2. Provide the check, rather than a translation** · **done 2026-09-15**
   ```bash
-  cp /tmp/acczed_theme.pot ~/Desktop/Projects/acczed-addons/acczed_theme/i18n/ar.po
-  # translate msgstr entries, then:
-  env -u PYTHONPATH ~/Desktop/Projects/odoo-acczed-venv/.venv/bin/python odoo-bin -c odoo.conf -d acczed --i18n-overwrite --modules=acczed_theme --stop-after-init
+  bash tools/verify-rtl.sh --check 5     # seam 5
+  python3 tools/i18n-coverage.py --selftest
   ```
-  → expected: Arabic strings loaded
-- [ ] **3. Review untranslated leftovers**
+  → `tools/i18n-coverage.py` compares the POT against the `ar` export and fails, naming the terms,
+  when any authored string lacks a translation. Wired into the harness as seam 5.
+- [ ] **3. Translate, when there is something to translate** · **deferred by design**
   ```bash
-  # Settings -> Translations -> Translated Terms, filter language ar_001 and module acczed_theme
+  # the first authored strings arrive with phase D (branding: title, login page, company, mail)
+  odoo-bin i18n import -c odoo.conf -d acczed -l ar -w acczed_theme/i18n/ar.po
   ```
-  → expected: no untranslated entry we authored
+  → whoever adds the first user-visible string in `acczed_theme` owns translating it, per CONVENTIONS §8.
 
 ## Verification
 
-- `i18n/ar.po` exists in the module and is loaded.
-- No English text we authored appears in the Arabic UI.
-- Arabic terminology is consistent (financial terms reviewed).
+- `i18n/ar.po` exists in the module and is loaded. **Not yet applicable — no file, because no terms.**
+- No English text we authored appears in the Arabic UI. **Vacuously true today:** there is no text we
+  authored. This becomes a real claim the moment phase D adds any.
+- Arabic terminology is consistent (financial terms reviewed). **Not applicable yet.**
+- **The check itself is proven able to fail** — the part that matters, since a check that has never
+  been seen to fail is indistinguishable from one that cannot:
+  ```bash
+  python3 tools/i18n-coverage.py --selftest
+  # 7 fixtures: empty(vacuous), translated, untranslated, partial, full, multi-line x2
+  # → "all fixtures behaved as expected"
+  ```
+  Three of the seven expect exit 1 — an untranslated term, partial coverage, and an untranslated
+  multi-line msgid. The harness also reports the real module as **VACUOUS, "not a pass"**, rather than
+  letting an empty module read as a green tick.
 
 ## Done when
 
-- [ ] ar.po committed
-- [ ] Arabic UI free of our own untranslated strings
+- [x] the mechanism exists, is wired into the harness, and is proven falsifiable
+- [x] the stale `--i18n-*` commands are corrected to Odoo 19 syntax
+- [ ] **`i18n/ar.po` committed — deferred; it would be an empty file today.** Re-open this box with
+      phase D, which is the first task group to author user-visible strings.
+
+## Risks / notes
+
+- ⚠️ **Do not tick this task as "Arabic translation done".** What closed is the *mechanism*. No string
+  has been translated because none exists, and the module is still an empty skeleton (ACC-B06
+  established it changes nothing visually). The status line says so deliberately.
+- **Why the gap was invisible:** with no authored strings, "no English text we authored appears in the
+  Arabic UI" is true for a reason that has nothing to do with translation quality. That is exactly the
+  false-comfort pattern the ACC-A06 audit was written to catch, so it is recorded here rather than
+  quietly passed.
+- **`-l` takes a locale, not an Odoo language code.** `ar_001` is `ar` to the CLI. Using the Odoo code
+  silently produces an empty export rather than an error.
+- **Term extraction is Odoo's, not ours.** The check reads the POT from `i18n export` rather than
+  grepping sources, so its definition of "translatable" cannot drift from Odoo's.
 
 ---
 ← Phase E index: [../README.md](../README.md)
