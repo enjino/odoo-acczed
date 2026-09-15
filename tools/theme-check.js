@@ -116,6 +116,48 @@ const EXPECTED = [
     problems.push('web.assets_web_dark was not requested — color_scheme() is not returning dark');
   }
 
+  // ACC-C04 — the systray toggle must actually flip the SERVED bundle, not just a cookie.
+  //
+  // This is the whole point of the C02 decision: the bundle is chosen server-side, so a toggle that
+  // only writes a cookie and reloads would appear to work and change nothing. The round-trip is
+  // therefore asserted end to end — click, reload, observe which bundle the browser actually got.
+  const TOGGLE = '.o_acczed_scheme_toggle';
+  const bundleIsDark = () => page.evaluate(() => {
+    const urls = performance.getEntriesByType('resource').map(e => e.name)
+      .concat([...document.styleSheets].map(s => s.href || ''));
+    return urls.some(u => u.includes('assets_web_dark'));
+  });
+  const clickAndSettle = async () => {
+    await page.click(TOGGLE);
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(2500);   // the reload is what re-serves the bundle
+  };
+
+  if (!(await page.$(TOGGLE))) {
+    console.log(`  BAD  scheme toggle absent     no ${TOGGLE} in the systray (ACC-C04)`);
+    problems.push(`no ${TOGGLE} found in the systray`);
+  } else {
+    const started = await bundleIsDark();
+    await clickAndSettle();
+    const flipped = await bundleIsDark();
+    await clickAndSettle();
+    const returned = await bundleIsDark();
+
+    if (flipped === started) {
+      console.log(`  BAD  toggle does not flip     bundle stayed ${started ? 'dark' : 'light'} across a click`);
+      problems.push('toggle wrote the cookie but the served bundle never changed');
+    } else if (returned !== started) {
+      console.log(`  BAD  toggle round-trip        ${started} -> ${flipped} -> ${returned}, expected to return`);
+      problems.push(`toggle round-trip did not return to its start (${started} -> ${flipped} -> ${returned})`);
+    } else {
+      console.log(`  ok   toggle round-trip        ${started ? 'dark' : 'light'} -> ${flipped ? 'dark' : 'light'} -> ${returned ? 'dark' : 'light'}`);
+    }
+    // Leave the browser on dark, so a failed run does not poison the next one.
+    if (!(await bundleIsDark())) {
+      await clickAndSettle();
+    }
+  }
+
   await browser.close();
   if (problems.length) {
     console.error('MISMATCH: ' + problems.join(' ; '));

@@ -78,6 +78,41 @@ Standard Odoo labels come with the Arabic translation; everything we invent has 
 - [ ] **`i18n/ar.po` committed — deferred; it would be an empty file today.** Re-open this box with
       phase D, which is the first task group to author user-visible strings.
 
+## Correction (2026-09-15, found by ACC-C04)
+
+**The check built here could not see a code-string translation.** ACC-C04 authored the module's first
+user-visible strings (two JS labels) and supplied correct Arabic in `i18n/ar.po` — the module loaded it
+(`loading translation file …/i18n/ar.po for language ar_001`) — and this guard still reported both as
+untranslated. It would have done so **permanently**, whatever the `.po` said.
+
+Why: the check compared the POT against `odoo-bin i18n export -l ar`, and that export reads a
+**database cursor** (`odoo/tools/translate.py:1049`). Odoo 19 does not keep strings authored in JS or
+QWeb in the database — it serves them from the module's `.po` at runtime
+(`odoo/tools/translate.py:1858-1881`, `CodeTranslations`). Measured directly:
+
+```
+Display Name        → اسم العرض      exported fine (DB-backed)
+HTTP Routing        → مسار HTTP      exported fine (DB-backed)
+ID                  → المُعرف        exported fine (DB-backed)
+Switch to dark mode → ""             ALWAYS empty (file-backed)
+Switch to light mode → ""            ALWAYS empty (file-backed)
+```
+
+The guard only ever appeared to work because the module authored zero terms when it was written — and
+then it *did* correctly catch the two new strings, which made it look healthy right up to the point
+where no translation could satisfy it.
+
+**Fixed** in `tools/i18n-coverage.py`: a third source, the module's own `i18n/<lang>.po`, is merged in,
+and a term counts as translated if either source has it. `verify-rtl.sh --check 5` passes it
+automatically. Re-verified: the 7 self-test fixtures still behave, the real module now reports
+`all 5 authored terms translated`, and pointing the third argument at a missing file makes it fail
+again (2/5 untranslated) — so the fix did not turn it into a check that always passes.
+
+**The lesson:** a check that has only ever been run against an empty input is not a working check, even
+when it later reports the right answer once. This one had a self-test with three deliberately failing
+fixtures — and still shipped a defect, because the fixtures exercised the *comparison* rather than the
+*plumbing that feeds it*. ACC-C04 is what exercised the plumbing.
+
 ## Risks / notes
 
 - ⚠️ **Do not tick this task as "Arabic translation done".** What closed is the *mechanism*. No string

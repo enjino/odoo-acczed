@@ -30,6 +30,7 @@ REPO="${ACCZED_REPO:-$HOME/Desktop/Projects/odoo-acczed}"
 VENV="${ACCZED_VENV:-$HOME/Desktop/Projects/odoo-acczed-venv/.venv}"
 CONF="${ACCZED_CONF:-$REPO/odoo.conf}"
 MODULE="${ACCZED_MODULE:-acczed_theme}"
+ADDONS="${ACCZED_ADDONS:-$HOME/Desktop/Projects/acczed-addons}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 PASS=0; FAIL=0
@@ -191,8 +192,13 @@ seam_i18n() {
   env -u PYTHONPATH "${odoo[@]}" -l ar -o "$po" "$MODULE" >/dev/null 2>&1
   [ -f "$po" ] || : > "$po"
 
+  # The module's own i18n/<lang>.po is passed as a THIRD source: Odoo serves strings authored in JS
+  # and QWeb from that file at runtime, and `i18n export` reads a database cursor, so it can never
+  # see them. Without this, every authored code string reads as untranslated forever. (Found by
+  # ACC-C04, which is the first task to author one.)
   local out rc=0
-  out=$(python3 "$HERE/i18n-coverage.py" "$pot" "$po") || rc=$?
+  out=$(python3 "$HERE/i18n-coverage.py" "$pot" "$po" \
+        "$ADDONS/$MODULE/i18n/${ISO_LANG:-ar}.po") || rc=$?
   case "$rc" in
     0) if printf '%s' "$out" | grep -q VACUOUS; then
          ok "0 authored terms — nothing to translate yet (vacuous, not a pass)"
