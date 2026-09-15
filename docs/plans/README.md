@@ -116,7 +116,7 @@ artifact, check whether either should be there at all before reordering them.
 | [ACC-C01](C-dark-theme/ACC-C01-map-tokens-to-scss-variables.md) | Map the site tokens onto Odoo SCSS variables | ACC-B05 | 45 min | ✅ |
 | [ACC-C02](C-dark-theme/ACC-C02-force-dark-color-scheme.md) | Make the dark bundle load by default | ACC-C01 | 30 min | ✅ |
 | [ACC-C03](C-dark-theme/ACC-C03-dark-scss-overrides.md) | Style what variables cannot reach | ACC-C02 | 1–2 days | ⏳ |
-| [ACC-C04](C-dark-theme/ACC-C04-systray-color-scheme-toggle.md) | Add the colour-scheme toggle in the systray | ACC-C02 | 4 hrs | ⏳ |
+| [ACC-C04](C-dark-theme/ACC-C04-systray-color-scheme-toggle.md) | Add the colour-scheme toggle in the systray | ACC-C02 | 4 hrs | ✅ |
 | [ACC-C05](C-dark-theme/ACC-C05-identity-fine-tuning.md) | Fine-tune the identity details | ACC-C03 | 3 hrs | ⏳ |
 | [ACC-C06](C-dark-theme/ACC-C06-deploy-theme-to-production.md) | Deploy the theme to production | ACC-C05, ACC-B07 | 1 hr | ⏳ |
 
