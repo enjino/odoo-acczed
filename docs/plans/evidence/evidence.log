@@ -289,3 +289,12 @@
 2026-09-17 | node tools/shot.js /odoo/action-base.action_res_users | after-c-revert-backend-home.png (39138 B) — stock Odoo: light surfaces, purple navbar, no toggle. after-c01-backend-home.png kept as the record of the removed theme (relabelled withdrawn)
 2026-09-17 | bash tools/verify-rtl.sh | 11 passed, 0 failed — including seam 5 "0 authored terms — nothing to translate yet (vacuous, not a pass)"
 2026-09-17 | fork | tools/theme-check.js deleted; tools/i18n-coverage.py + tools/verify-rtl.sh reverted to their pre-C04 shape (the third source read the deleted i18n/ar.po); C01-C04 task files restored from 122c7b8c with built->reverted status lines; README, ACC-I01 and ACC-E04 updated to match
+
+# --- ACC-F01 tokens.json / ACC-F02 the token generator ---
+2026-09-17 | acczed-addons/tokens.json | 15 keys: the 12 site colours + radius + font + fontStack. The plan's single "font": "Inter" was split in two: globals.css hardcodes the whole stack, and re-inventing the fallbacks inside a generator would hide a design decision in code.
+2026-09-17 | node scripts/gen-tokens.mjs (real target) | ok — already in sync. The generated :root region is byte-identical to the hand-written block, so the diff is the two marker lines and nothing else.
+2026-09-17 | drifted copy (--glow hand-edited to #ff00aa) | WRITE — restored to #39d353 ; second run -> ok — already in sync (IDEMPOTENT)
+2026-09-17 | markers stripped on a copy | FAIL — marker contract broken (found 0/0), exit 1. The generator refuses to clobber a file it does not recognise.
+2026-09-17 | node scripts/gen-tokens.mjs --css <drifted> --check | DRIFT — not in sync with tokens.json, exit 1 (CI-usable)
+2026-09-17 | git -C acczed-site diff | app/globals.css: +2 lines (the marker pair), values unchanged. next-env.d.ts is also dirty — the Next.js agent-file artifact, pre-existing and untouched by this work.
+2026-09-17 | PARKED | the Odoo target is ACC-F02b: the token -> Odoo-variable mapping and $o-theme-text-colors (danger: design says #d23f3a, the reverted build used gold #e3b341) are ACC-C01's calls, so the generator does not make them from phase F.
