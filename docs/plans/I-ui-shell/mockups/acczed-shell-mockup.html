@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>acczed shell — design mockup (ACC-I04)</title>
+<style>
+/* ============================================================================
+   acczed shell mockup — ACC-I04
+   Shape is FIXED (ACC-I01 §1): rail = sections -> panel = apps -> app tree.
+   The switches at the top explore the three open decisions:
+     D2 density / what gives at 1366px   D3 nav extras   D4 palette
+   Geometry follows VS Code's contract: rail 48 -> 36 -> 28, panel min 170,
+   top bar 35, status bar 22 (ACC-I01 §7). Driven by custom properties.
+   ========================================================================= */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --panel-w:280px; --topbar-h:35px; --statusbar-h:22px;
+  --row-h:30px; --pad:8px; --radius:12px;
+  --bg:#0d1117; --bg-soft:#101720; --card:#131a24; --border:#1f2a37; --border-soft:#1a2330;
+  --text:#e6edf3; --dim:#8b98a9; --faint:#5c6a7a;
+  --glow:#39d353; --glow-soft:#7ee787; --teal:#4ad3c9; --gold:#e3b341;
+  --accent:#39d353; --accent-ink:#0d1117;
+  --sel-on:rgba(57,211,83,.22); --sel-hover:rgba(57,211,83,.12);
+  --atmosphere:1; --shell-gap:0px; --shell-pad:0px;
+  --font:Inter,-apple-system,"Segoe UI",system-ui,"Noto Sans Arabic",sans-serif;
+}
+/* ---- D2: density contract — VS Code's four width states, applied to the SIDEBAR ----
+   (the rail is gone: 280 default -> 236 compact -> 172 narrow; floating = inset card) */
+.shell[data-density="compact"]{--panel-w:236px;--row-h:26px;--pad:6px}
+.shell[data-density="narrow"]{--panel-w:172px;--row-h:24px;--pad:5px}
+.shell[data-density="floating"]{--panel-w:280px;--row-h:28px;--pad:7px;--shell-gap:8px;--shell-pad:8px;--radius:10px}
+.shell[data-density="floating"] .panel{background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+/* the squeeze: with chatter open the sidebar NARROWS, it does not vanish */
+.shell[data-squeeze="true"]{--panel-w:172px}
+/* ---- D4: palette philosophy ---- */
+.shell[data-palette="desaturated"]{
+  --accent:#3f8f77; --glow:#4f9d84; --glow-soft:#8fc7b4; --teal:#5aa8a0; --gold:#c3a35a;
+  --sel-on:rgba(255,255,255,.13); --sel-hover:rgba(255,255,255,.06);
+  --atmosphere:0;
+}
+html,body{margin:0;height:100%}
+body{background:#06080b;color:var(--text);font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased}
+.toolbar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+  padding:10px 16px;background:#0a0d11;border-bottom:1px solid #1b2430;font-size:12px}
+.toolbar .grp{display:flex;align-items:center;gap:6px}
+.toolbar .lbl{color:#5c6a7a;text-transform:uppercase;letter-spacing:.08em;font-size:10px;margin-inline-end:2px}
+.seg{display:flex;border:1px solid #1f2a37;border-radius:7px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:4px 9px;color:#8b98a9;font-size:11.5px}
+.seg button+button{border-inline-start:1px solid #1f2a37}
+.seg button[aria-pressed="true"]{background:#17222e;color:#e6edf3}
+.seg button:hover{color:#e6edf3}
+.toolbar .note{color:#5c6a7a;margin-inline-start:auto}
+.stage{padding:22px 22px 40px;overflow:auto}
+.frame-wrap{position:relative;margin-inline:auto}
+.frame{width:1366px;height:768px;background:var(--bg);border:1px solid #232d3a;border-radius:14px;
+  overflow:hidden;transform-origin:top left;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+/* ===================== the shell ===================== */
+.shell{display:grid;grid-template-columns:1fr;
+  grid-template-rows:1fr var(--statusbar-h);height:100%;gap:var(--shell-gap);padding:var(--shell-pad)}
+/* the sidebar is now the ONLY navigation: sections are headings inside it, not a level above it */
+.brand{display:flex;align-items:center;gap:7px;padding:10px 10px 4px}
+.brand .mark{color:var(--glow);font-size:14px;line-height:1}
+.brand b{font-size:13.5px;font-weight:600}
+.brand .ver{margin-inline-start:auto;color:var(--faint);font-size:10.5px}
+.sec-head{display:flex;align-items:center;gap:5px;cursor:pointer}
+.sec-head:hover{color:var(--text)}
+.sec-head .tw{transform:rotate(90deg)}
+.sec-head[data-open="false"] .tw{transform:rotate(0)}
+.prow .tw{width:14px;height:14px;display:grid;place-items:center;color:var(--faint);flex:0 0 auto;
+  transition:transform .12s}
+.prow[data-open="true"] .tw{transform:rotate(90deg)}
+/* ---- main column ---- */
+.main{grid-row:1;display:grid;grid-template-rows:var(--topbar-h) 1fr;min-width:0;background:var(--bg)}
+.topbar{display:flex;align-items:center;gap:10px;padding-inline:12px;border-block-end:1px solid var(--border);min-width:0}
+.topbar .crumbs{display:flex;align-items:center;gap:7px;color:var(--dim);min-width:0;font-size:12.5px}
+.topbar .crumbs b{color:var(--text);font-weight:550}
+.crumbs .sep{color:var(--faint)}
+.kchip{margin-inline-start:auto;display:flex;align-items:center;gap:6px;color:var(--dim);
+  border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:11.5px;white-space:nowrap}
+.kchip kbd{font:inherit;color:var(--faint)}
+.topbar .acts{display:flex;gap:2px;color:var(--faint)}
+.topbar .acts span{width:26px;height:26px;display:grid;place-items:center;border-radius:7px}
+.topbar .acts span:hover{background:var(--sel-hover);color:var(--text)}
+.body{display:grid;grid-template-columns:var(--panel-w) 1fr;min-height:0}
+.shell[data-panel="collapsed"] .body{grid-template-columns:0 1fr}
+.shell[data-panel="collapsed"] .panel{opacity:0;pointer-events:none;overflow:hidden}
+.panel{background:var(--bg-soft);border-inline-end:1px solid var(--border);display:flex;flex-direction:column;
+  min-height:0;overflow:hidden;transition:width .12s ease}
+.phead{display:flex;align-items:center;gap:8px;padding:9px 10px 7px;min-height:34px}
+.phead .back{all:unset;cursor:pointer;color:var(--faint);display:grid;place-items:center;width:20px;height:20px;border-radius:6px}
+.phead .back:hover{background:var(--sel-hover);color:var(--text)}
+.phead .ttl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);font-weight:600;min-width:0}
+.phead .ttl b{display:block;font-size:13px;letter-spacing:0;text-transform:none;color:var(--text);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phead .ttl i{display:block;font-style:normal;font-size:11px;letter-spacing:0;text-transform:none;color:var(--faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptoggle{all:unset;cursor:pointer;color:var(--faint);display:grid;place-items:center;width:24px;height:24px;
+  border-radius:7px;flex:0 0 auto;font-size:12px;line-height:1}
+.ptoggle:hover{background:var(--sel-hover);color:var(--text)}
+.ptoggle[data-panel="collapsed"]{color:var(--dim)}
+.psearch{margin:2px 10px 8px;display:flex;align-items:center;gap:7px;background:var(--card);
+  border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--faint);font-size:12px}
+.psearch svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7}
+.plist{overflow:auto;padding:0 6px 10px;min-height:0;flex:1}
+.pgroup{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+  padding:9px 8px 5px;font-weight:600}
+.prow{display:flex;align-items:center;gap:9px;height:var(--row-h);padding-inline:8px;border-radius:8px;
+  color:var(--dim);cursor:pointer;position:relative}
+.prow:hover{background:var(--sel-hover);color:var(--text)}
+.prow[aria-current="true"]{background:var(--sel-on);color:var(--text)}
+.prow .ico{width:19px;height:19px;border-radius:6px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--card);border:1px solid var(--border);font-size:10px;font-weight:700;color:var(--dim);overflow:hidden}
+.prow .ico img{width:100%;height:100%;object-fit:cover;display:block}
+.prow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.prow .cnt{margin-inline-start:auto;color:var(--faint);font-size:10.5px;font-variant-numeric:tabular-nums}
+.tree .prow{height:calc(var(--row-h) - 1px)}
+.tree .prow .tw{width:14px;height:14px;color:var(--faint);flex:0 0 auto;display:grid;place-items:center;
+  transition:transform .12s}
+.tree .prow[data-open="true"] .tw{transform:rotate(90deg)}
+.tree .prow .dot{width:4px;height:4px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.tree .kids{overflow:hidden}
+.tree .kids[hidden]{display:none}
+.pfoot{border-block-start:1px solid var(--border-soft);padding:7px 10px;color:var(--faint);font-size:10.5px;
+  display:flex;justify-content:space-between;gap:8px}
+/* ---- content / action area ---- */
+.content{position:relative;min-width:0;display:grid;grid-template-columns:1fr;overflow:hidden}
+.content[data-chatter="on"]{grid-template-columns:1fr 320px}
+.content::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:var(--atmosphere);
+  background:radial-gradient(720px 320px at 12% -8%,rgba(57,211,83,.10),transparent 62%),
+             radial-gradient(520px 260px at 96% 4%,rgba(74,211,201,.07),transparent 60%)}
+.work{position:relative;min-width:0;display:flex;flex-direction:column}
+.cp{display:flex;align-items:center;gap:8px;padding:8px 12px;border-block-end:1px solid var(--border)}
+.cp .stitle{font-size:15px;font-weight:600}
+.cp .chip{border:1px solid var(--border);border-radius:999px;padding:2px 9px;color:var(--dim);font-size:11px}
+.cp .grow{flex:1}
+.cp .btn{border:1px solid var(--border);border-radius:8px;padding:3px 10px;color:var(--dim);font-size:12px}
+.cp .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.cp .search{display:flex;align-items:center;gap:6px;color:var(--faint);border:1px solid var(--border);
+  border-radius:8px;padding:3px 9px;font-size:12px;min-width:180px}
+/* any bare inline SVG defaults to 300x150 with black fill — pin every icon's box */
+.shell svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.views{overflow:auto;flex:1;min-height:0}
+table.list{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.list th{position:sticky;top:0;background:var(--bg);text-align:start;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--faint);font-weight:600;padding:9px 12px;border-block-end:1px solid var(--border)}
+table.list td{padding:8px 12px;border-block-end:1px solid var(--border-soft);color:var(--dim);font-size:12.5px}
+table.list tr:hover td{background:var(--sel-hover)}
+table.list td.num{text-align:end}
+table.list td b{color:var(--text);font-weight:550}
+.state{border:1px solid var(--border);border-radius:999px;padding:1px 8px;font-size:10.5px;color:var(--dim)}
+.state.ok{border-color:rgba(57,211,83,.5);color:var(--glow)}
+.state.wait{border-color:rgba(227,179,65,.45);color:var(--gold)}
+/* form */
+.sheet{padding:16px 20px;max-width:760px}
+.sheet h1{margin:0 0 4px;font-size:19px;font-weight:600}
+.sheet .sub{color:var(--faint);font-size:12px;margin-block-end:12px}
+.statusbar-pills{display:flex;gap:6px;margin-block-end:14px}
+.pill{border:1px solid var(--border);border-radius:999px;padding:2px 11px;font-size:11.5px;color:var(--dim)}
+.pill[aria-current="true"]{background:var(--sel-on);border-color:rgba(57,211,83,.45);color:var(--text)}
+.tabs{display:flex;gap:14px;border-block-end:1px solid var(--border);margin-block-end:14px}
+.tabs span{padding-block-end:7px;color:var(--dim);font-size:12.5px}
+.tabs span[aria-current="true"]{color:var(--text);box-shadow:inset 0 -2px 0 var(--glow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+.f label{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-block-end:4px}
+.f .v{color:var(--text);font-size:12.5px;border-block-end:1px dotted var(--border);padding-block-end:5px}
+.f .v.money{font-variant-numeric:tabular-nums}
+/* chatter */
+.chatter{border-inline-start:1px solid var(--border);background:var(--bg-soft);display:flex;flex-direction:column;min-width:0}
+.chatter .ch{padding:9px 12px;border-block-end:1px solid var(--border);color:var(--dim);font-size:11.5px;
+  display:flex;gap:12px}
+.chatter .ch b{color:var(--text);font-weight:600}
+.msg{padding:10px 12px;display:flex;gap:9px;border-block-end:1px solid var(--border-soft)}
+.msg .av{width:24px;height:24px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:10px;
+  font-weight:700;color:var(--accent-ink);background:var(--glow-soft)}
+.msg .who{font-size:12px;color:var(--text);font-weight:550}
+.msg .when{color:var(--faint);font-size:10.5px;margin-inline-start:6px;font-weight:400}
+.msg p{margin:3px 0 0;color:var(--dim);font-size:12px;line-height:1.5}
+/* status bar */
+.statusbar{grid-column:1 / -1;display:flex;align-items:center;gap:12px;padding-inline:10px;
+  background:var(--bg-soft);border-block-start:1px solid var(--border);color:var(--faint);font-size:11px}
+.statusbar .grow{flex:1}
+.statusbar b{color:var(--dim);font-weight:500}
+/* annotation overlay */
+.frame[data-annotate="true"] .anno{opacity:1}
+.anno{position:absolute;opacity:0;transition:opacity .15s;pointer-events:none;z-index:9;
+  background:rgba(57,211,83,.14);border:1px dashed rgba(57,211,83,.55);color:var(--glow-soft);
+  font-size:10px;padding:1px 5px;border-radius:5px;white-space:nowrap}
+.anno.a-panel{inset-inline-start:6px;top:120px}
+.anno.a-top{inset-inline-start:calc(var(--panel-w) + 6px);top:8px}
+.anno.a-status{inset-inline-start:6px;bottom:2px}
+.anno.a-chatter{inset-inline-end:8px;top:8px}
+/* RTL: the frame mirrors by direction alone (no hardcoded sides anywhere) */
+.frame[dir="rtl"]{font-family:"Noto Sans Arabic",var(--font)}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="grp"><span class="lbl">D2 density</span>
+    <div class="seg" data-set="density">
+      <button data-v="default" aria-pressed="true">Default · 280</button>
+      <button data-v="compact">Compact · 236</button>
+      <button data-v="narrow">Narrow · 172</button>
+      <button data-v="floating">Floating inset</button>
+    </div>
+  </div>
+  <div class="grp"><span class="lbl">D3 extras</span>
+    <div class="seg" data-set="extras">
+      <button data-v="off">Off</button>
+      <button data-v="on" aria-pressed="true">Pinned recents + ⌘K</button>
+    </div>
+  </div>
+  <div class="grp"><span class="lbl">D4 palette</span>
+    <div class="seg" data-set="palette">
+      <button data-v="botanical" aria-pressed="true">Botanical glow</button>
+      <button data-v="desaturated">Desaturated</button>
+    </div>
+  </div>
+  <div class="grp"><span class="lbl">Data</span>
+    <div class="seg" data-set="dataset">
+      <button data-v="today" aria-pressed="true">Today · 42 modules</button>
+      <button data-v="full">Full install · 24 apps</button>
+    </div>
+  </div>
+  <div class="grp"><span class="lbl">State</span>
+    <div class="seg" data-set="chatter">
+      <button data-v="off" aria-pressed="true">Chatter off</button>
+      <button data-v="on">Chatter open · 1366px</button>
+    </div>
+  </div>
+  <div class="grp">
+    <div class="seg" data-set="dir">
+      <button data-v="ltr" aria-pressed="true">LTR</button>
+      <button data-v="rtl">RTL · عربي</button>
+    </div>
+    <div class="seg" data-set="size">
+      <button data-v="1366" aria-pressed="true">1366×768</button>
+      <button data-v="1920">1920×1080</button>
+    </div>
+    <div class="seg" data-set="annotate">
+      <button data-v="false" aria-pressed="true">Annotate off</button>
+      <button data-v="true">Measure</button>
+    </div>
+  </div>
+  <span class="note">sidebar · sections → apps → trees · click an app to expand its menu</span>
+</div>
+
+<div class="stage">
+  <div class="frame-wrap">
+    <div class="frame" id="frame" dir="ltr" data-annotate="false">
+      <div class="shell" id="shell" data-density="default" data-palette="botanical" data-panel="open" data-squeeze="false">
+        <div class="main">
+          <header class="topbar">
+            <button class="ptoggle" id="ptoggle" data-panel="open" title="Show / hide the panel">▤</button>
+            <div class="crumbs" id="crumbs"></div>
+            <div class="kchip" id="kchip">Search everything <kbd>⌘K</kbd></div>
+            <div class="acts"><span>◎</span><span>?</span><span>◍</span></div>
+          </header>
+          <div class="body">
+            <aside class="panel">
+              <div class="brand"><span class="mark">🌿</span><b>acczed</b><span class="ver">19.0</span></div>
+              <div class="psearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span id="psearch-txt">Search all apps…</span></div>
+              <div class="plist" id="plist"></div>
+              <div class="pfoot" id="pfoot"></div>
+            </aside>
+            <section class="content" id="content" data-chatter="off">
+              <div class="work" id="work"></div>
+              <div class="chatter" id="chatter"></div>
+            </section>
+          </div>
+        </div>
+        <footer class="statusbar">
+          <b id="sb-left">acczed</b><span id="sb-mid"></span><span class="grow"></span>
+          <span id="sb-right">⟳ synced · عربي (ar_001) · EN</span>
+        </footer>
+      </div>
+      <span class="anno a-panel" id="anno-panel"></span>
+      <span class="anno a-top" id="anno-top"></span>
+      <span class="anno a-status" id="anno-status"></span>
+      <span class="anno a-chatter" id="anno-chatter"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================ section icons (ours to design) ============================ */
+const ICONS = {
+  finance:'<svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19V9m5 10V5m5 14v-7"/><path d="M4 7.5C7 7.5 8 4 12 4s5 3.5 8 3.5"/></svg>',
+  sales:'<svg viewBox="0 0 24 24"><path d="M4 15l5-5 4 3 7-7"/><path d="M20 6v5h-5"/><path d="M4 20h16"/></svg>',
+  operations:'<svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>',
+  people:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>',
+  work:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/><path d="M11 7.5h4a2 2 0 0 1 2 2v3.5M7.5 11v4a2 2 0 0 0 2 2h3.5"/></svg>',
+  platform:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 3v2.4M12 18.6V21M4.2 7.5l2 1.2M17.8 15.3l2 1.2M4.2 16.5l2-1.2M17.8 8.7l2-1.2"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24"><path d="M5 19c0-7 5-12 14-12 0 7-5 12-14 12z"/><path d="M5 19c2-4 5-7 9-9"/></svg>'
+};
+const SEARCH='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+const CHEV='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+
+/* ============================ data ============================
+   "today" trees + all Arabic labels are REAL, read from the acczed DB on 2026-09-15.
+   "full" app trees are illustrative (those modules are not installed yet); their
+   Arabic names are Odoo's standard translations, shown as the mockup's RTL state.   */
+const T = (n, kids) => kids ? {n, k:kids} : {n};
+
+const TREE = {
+  settings:[T('General Settings'),T('Users & Companies',['Users','Groups','Privileges','Companies']),
+    T('Translations',['Languages',T('Import / Export',['Import Translation','Export Translation']),T('Application Terms')]),
+    T('Custom Shortcuts'),T('Technical',[
+      T('Discuss',['Messages','Scheduled Messages','Subtypes','Tracking Values','Notifications','Followers','Email Blacklist','Ratings','User Settings','Guests','RTC sessions','ICE Servers','Message Reactions']),
+      T('Actions',['Actions','Window Actions','Server Actions','Reports','Client Actions','User-defined Defaults']),
+      T('Reports',['Reports','Paper Formats','Report Layouts']),
+      T('Database Structure',['Models','Fields','Fields Selection','External Identifiers','Attachments','Decimal Precision','Modules','Module Categories','Module Dependencies','Assets','Assets Bundles']),
+      T('Automation',['Automation Rules','Scheduled Actions','Scheduled Actions Triggers','Base Automation','Email Templates']),
+      T('Email',['Mailboxes','Email Servers','Email Aliases','Incoming Mail Servers','Outgoing Mail Servers','Email Templates','Mailing Lists']),
+      T('User Interface',['Views','Menus','Menu Items','Window Actions','Translations','Icons','Custom Shortcuts']),
+      T('Security',['Groups','Record Rules','Access Rights','Field Access Rights','Users','Session Info'])
+    ])],
+  project:[T('Projects'),T('Tasks',['My Tasks','All Tasks']),
+    T('Reporting',['Tasks Analysis','Customer Ratings']),
+    T('Configuration',['Settings','Projects','Project Stages','Task Stages','Tags','Project Roles','Activity Types','Activity Plans'])],
+  discuss:[T('Discuss'),T('Channels'),
+    T('Configuration',['Notifications','Voice & Video','Canned Responses','Roles']),T('Integrations'),T('Technical',['Call History'])],
+  apps:[T('Apps',['Main Apps','Theme Store','Third-Party Apps']),T('Update Apps List'),T('Apply Scheduled Upgrades'),T('Import Module')],
+  todo:[T('To-do')],
+  tests:[T('Tests')],
+  account:[T('Customers',['Invoices','Payments','Credit Notes']),T('Vendors',['Bills','Payments','Refunds']),
+    T('Accounting',['Journal Entries','Journal Items','Reconciliation','Lock Dates']),
+    T('Reporting',['Balance Sheet','Profit & Loss','Cash Flow','Tax Report','Audit','Partner Ledger']),
+    T('Configuration',['Settings','Chart of Accounts','Journals','Taxes','Fiscal Positions','Currencies','Payment Terms'])],
+  expenses:[T('My Expenses'),T('To Submit'),T('To Approve'),T('Reporting',['Expenses Analysis']),T('Configuration',['Settings','Expense Categories','Approval Rules'])],
+  payroll:[T('Payslips'),T('Contracts'),T('Reporting',['Payroll Analysis']),T('Configuration',['Settings','Salary Structures','Contribution Registers','GOSI','End of Service'])],
+  crm:[T('My Pipeline'),T('Leads'),T('Opportunities'),T('Reporting',['Pipeline Analysis','Lead Analysis']),T('Configuration',['Settings','Sales Teams','Stages'])],
+  sale:[T('Orders',['Quotations','Orders','Customers']),T('Products',['Products','Price Lists','Product Variants']),
+    T('Reporting',['Sales Analysis']),T('Configuration',['Settings','Sales Teams','Pricelists'])],
+  pos:[T('Orders'),T('Sessions'),T('Products'),T('Reporting',['POS Analysis']),T('Configuration',['Settings','Payment Methods','Receipts'])],
+  subscription:[T('Subscriptions'),T('Quotations'),T('Reporting',['MRR Analysis']),T('Configuration',['Settings','Recurring Plans','Payment Terms'])],
+  stock:[T('Operations',['Receipts','Delivery Orders','Internal Transfers','Physical Inventory']),
+    T('Products',['Products','Lots / Serial Numbers','Packages']),T('Reporting',['Stock Moves','Inventory Report','Valuation']),
+    T('Configuration',['Settings','Warehouses','Locations','Operation Types','Routes','Reordering Rules'])],
+  mrp:[T('Operations',['Manufacturing Orders','Work Orders','Work Centers']),T('Products',['Bills of Materials','Products']),
+    T('Reporting',['MO Analysis','Overall Equipment Effectiveness']),T('Configuration',['Settings','Routings','Work Centers','Bills of Materials'])],
+  purchase:[T('Orders',['Requests for Quotation','Purchase Orders']),T('Products',['Products','Vendors']),
+    T('Reporting',['Purchase Analysis']),T('Configuration',['Settings','Vendor Pricelists'])],
+  quality:[T('Control Points'),T('Quality Checks'),T('Reporting',['Quality Analysis']),T('Configuration',['Settings','Control Points','Teams'])],
+  field_service:[T('Tasks'),T('Planning',['Planning Slots']),T('Reporting',['Field Service Analysis']),T('Configuration',['Settings','Teams','Skills'])],
+  hr:[T('Employees'),T('Contracts'),T('Reporting',['Employee Analysis']),T('Configuration',['Settings','Departments','Job Positions','Contracts'])],
+  recruitment:[T('Applications'),T('Job Positions'),T('Reporting',['Recruitment Analysis']),T('Configuration',['Settings','Stages','Degrees'])],
+  timeoff:[T('My Time Off'),T('Allocations'),T('Reporting',['Time Off Analysis']),T('Configuration',['Settings','Time Off Types','Public Holidays','Allocation Requests'])],
+  appraisal:[T('Appraisals'),T('Goals'),T('Reporting',['Appraisal Analysis']),T('Configuration',['Settings','Appraisal Templates','Competencies'])],
+  timesheet:[T('My Timesheets'),T('All Timesheets'),T('Reporting',['Timesheet Analysis']),T('Configuration',['Settings','Activities','Projects'])],
+  helpdesk:[T('Tickets'),T('Reporting',['Ticket Analysis','SLA Analysis']),T('Configuration',['Settings','Teams','Stages','SLA Policies'])],
+  website:[T('Site'),T('Pages'),T('Reporting',['Traffic Analysis']),T('Configuration',['Settings','Domains','Redirects'])]
+};
+
+const APP = {
+  account:{n:'Accounting',ar:'المحاسبة',i:'ac'}, expenses:{n:'Expenses',ar:'المصروفات',i:'ex'},
+  payroll:{n:'Payroll',ar:'الرواتب',i:'pa'}, crm:{n:'CRM',ar:'إدارة العملاء',i:'cr'},
+  sale:{n:'Sales',ar:'المبيعات',i:'sa'}, pos:{n:'Point of Sale',ar:'نقطة البيع',i:'po'},
+  subscription:{n:'Subscriptions',ar:'الاشتراكات',i:'su'}, stock:{n:'Inventory',ar:'المخزون',i:'in'},
+  mrp:{n:'Manufacturing',ar:'التصنيع',i:'mf'}, purchase:{n:'Purchase',ar:'المشتريات',i:'pu'},
+  quality:{n:'Quality',ar:'الجودة',i:'qu'}, field_service:{n:'Field Service',ar:'الخدمة الميدانية',i:'fs'},
+  hr:{n:'Employees',ar:'الموظفون',i:'em'}, recruitment:{n:'Recruitment',ar:'التوظيف',i:'re'},
+  timeoff:{n:'Time Off',ar:'الإجازات',i:'ti'}, appraisal:{n:'Appraisals',ar:'تقييم الأداء',i:'ap'},
+  project:{n:'Project',ar:'المشروع',i:'pr',icon:'addons/project/static/description/icon.png'},
+  timesheet:{n:'Timesheets',ar:'الجداول الزمنية',i:'ts'}, helpdesk:{n:'Helpdesk',ar:'الدعم',i:'hd'},
+  discuss:{n:'Discuss',ar:'المناقشة',i:'di',icon:'addons/mail/static/description/icon.png'},
+  todo:{n:'To-do',ar:'المهام المراد تنفيذها',i:'td',icon:'addons/project_todo/static/description/icon.png'},
+  apps:{n:'Apps',ar:'التطبيقات',i:'aa',icon:'addons/base/static/description/modules.png'},
+  settings:{n:'Settings',ar:'الإعدادات',i:'se',icon:'addons/base/static/description/settings.png'},
+  tests:{n:'Tests',ar:'الاختبارات',i:'te',icon:'addons/base/static/description/exception.png'},
+  website:{n:'Website',ar:'الموقع الإلكتروني',i:'we'}
+};
+
+/* seeded default sections — the admin-authored grouping (ACC-I01 §4) */
+const SECTIONS = {
+  today:[
+    {id:'platform',n:'Platform',ar:'المنصة',icon:'platform',apps:['discuss','todo','apps','settings','tests']},
+    {id:'work',n:'Work',ar:'العمل',icon:'work',apps:['project']}
+  ],
+  full:[
+    {id:'finance',n:'Finance',ar:'المالية',icon:'finance',apps:['account','expenses','payroll']},
+    {id:'sales',n:'Sales & Marketing',ar:'المبيعات والتسويق',icon:'sales',apps:['crm','sale','pos','subscription']},
+    {id:'operations',n:'Operations',ar:'العمليات',icon:'operations',apps:['stock','mrp','purchase','quality','field_service']},
+    {id:'people',n:'People',ar:'الموارد البشرية',icon:'people',apps:['hr','recruitment','timeoff','appraisal']},
+    {id:'work',n:'Work',ar:'العمل',icon:'work',apps:['project','timesheet','helpdesk']},
+    {id:'platform',n:'Platform',ar:'المنصة',icon:'platform',apps:['discuss','todo','apps','settings','website']}
+  ]
+};
+const RECENT = {today:['project','discuss','settings'], full:['account','sale','stock','project','settings']};
+
+/* demo screens: one list, one form */
+const LIST_ROWS = [
+  ['INV/2026/0042','مدينة الرياض للتجارة','2026-09-02','12,400.00','SAR','Paid'],
+  ['INV/2026/0041','شركة الخليج للمقاولات','2026-09-01','86,250.00','SAR','Paid'],
+  ['INV/2026/0040','مؤسسة النخبة','2026-08-28','3,900.00','SAR','Waiting'],
+  ['INV/2026/0039','Al Faisaliah Group','2026-08-26','142,000.00','SAR','Waiting'],
+  ['INV/2026/0038','مجموعة الفهد','2026-08-21','27,650.00','SAR','Paid'],
+  ['INV/2026/0037','Nova Trading Co.','2026-08-19','8,120.00','SAR','Paid'],
+  ['INV/2026/0036','شركة أفق للتقنية','2026-08-14','54,300.00','SAR','Draft'],
+  ['INV/2026/0035','Desert Rose Est.','2026-08-11','19,750.00','SAR','Paid']
+];
+
+/* ============================ state ============================ */
+const state = {density:'default',palette:'botanical',extras:'on',dataset:'today',chatter:'off',dir:'ltr',size:'1366',annotate:'false',
+  app:null,open:{},secOpen:{},view:'list',panelLock:null};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const cur = () => SECTIONS[state.dataset];
+const label = a => state.dir === 'rtl' ? (a.ar || a.n) : a.n;
+
+/* ============================ render ============================ */
+function renderPanel(){
+  const list = $('#plist'), foot = $('#pfoot'), rtl = state.dir === 'rtl';
+  $('#psearch-txt').textContent = rtl ? 'ابحث في كل التطبيقات…' : 'Search all apps…';
+  const recents = state.extras === 'on' ? RECENT[state.dataset] : [];
+  let html = '';
+  if(recents.length){
+    html += `<div class="pgroup">${rtl?'الأحدث':'Recent'}</div>`
+          + recents.map(id => appRow(id, true)).join('');
+  }
+  html += cur().map(sec => {
+    const collapsed = state.secOpen[sec.id] === false;
+    return `<div class="pgroup sec-head" data-sechead="${sec.id}" data-open="${!collapsed}">
+        <span class="tw">${CHEV}</span><span>${esc(rtl?sec.ar:sec.n)}</span></div>
+      <div class="kids" ${collapsed?'hidden':''}>${sec.apps.map(id => appRow(id, false)).join('')}</div>`;
+  }).join('');
+  list.innerHTML = html;
+  const nApps = cur().reduce((t, s) => t + s.apps.length, 0);
+  foot.innerHTML = `<span>${cur().length} ${rtl?'أقسام':'sections'} · ${nApps} apps</span>
+    <span>${getComputedStyle($('#shell')).getPropertyValue('--panel-w').trim()}</span>`;
+}
+
+/* one row per app; its menu tree expands INLINE underneath (no second stage to enter) */
+function appRow(id, recent){
+  const a = APP[id], kids = countNodes(TREE[id]), open = !!state.open[id];
+  return `<div>
+    <div class="prow" data-app="${id}" data-open="${open}" aria-current="${state.app===id}"
+         style="padding-inline-start:${recent?8:10}px">
+      <span class="ico">${a.icon ? `<img src="../../../../${a.icon}" alt="" onerror="this.style.display='none'">` : ''}${a.i.toUpperCase()}</span>
+      <span class="nm">${esc(label(a))}</span>
+      <span class="cnt">${kids}</span>
+      <span class="tw">${CHEV}</span>
+    </div>
+    <div class="kids" ${open?'':'hidden'}>
+      <div class="tree">${treeHtml(TREE[id], 1, [id])}</div>
+    </div>
+  </div>`;
+}
+
+function treeHtml(nodes, depth, path){
+  return (nodes||[]).map((nd, i) => {
+    const p = path.concat(i), key = p.join('.');
+    const kids = nd.k && nd.k.length;
+    const open = state.open[key];
+    return `<div>
+      <div class="prow" ${kids?`data-node="${key}" data-open="${!!open}"`:''} data-depth="${depth}"
+           style="padding-inline-start:${8 + depth*13}px">
+        ${kids ? `<span class="tw">${CHEV}</span>` : '<span class="dot"></span>'}
+        <span class="nm">${esc(nd.n)}</span>
+      </div>
+      ${kids ? `<div class="kids" ${open?'':'hidden'}>${treeHtml(nd.k, depth+1, p)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+const countNodes = ns => (ns||[]).reduce((t, n) => t + 1 + countNodes(n.k), 0);
+
+function renderCrumbs(){
+  const parts = [];
+  if(state.app) parts.push(label(APP[state.app]));
+  parts.push(state.view === 'list' ? (state.dir==='rtl'?'الفواتير':'Invoices') : (state.dir==='rtl'?'فاتورة':'Invoice'));
+  $('#crumbs').innerHTML = parts.map((p,i) => (i? '<span class="sep">/</span>':'') +
+    (i===parts.length-1 ? `<b>${esc(p)}</b>` : `<span>${esc(p)}</span>`)).join('');
+}
+
+function renderWork(){
+  const rtl = state.dir === 'rtl';
+  const cp = `<div class="cp">
+      <span class="stitle">${rtl?'الفواتير':'Invoices'}</span>
+      <span class="chip">${rtl?'اليوم':'Today'}</span><span class="chip">${rtl?'غير مدفوعة':'Not paid'}</span>
+      <span class="grow"></span>
+      <span class="search">${SEARCH}${rtl?'بحث…':'Search…'}</span>
+      <span class="btn">${rtl?'تجميع':'Group by'}</span>
+      <span class="btn pri">${rtl?'جديد':'New'}</span>
+    </div>`;
+  if(state.view === 'list'){
+    $('#work').innerHTML = cp + `<div class="views"><table class="list">
+      <thead><tr><th>${rtl?'الرقم':'Number'}</th><th>${rtl?'العميل':'Customer'}</th><th>${rtl?'التاريخ':'Invoice Date'}</th>
+      <th style="text-align:end">${rtl?'الإجمالي':'Total'}</th><th>${rtl?'العملة':'Currency'}</th><th>${rtl?'الحالة':'Status'}</th></tr></thead>
+      <tbody>${LIST_ROWS.map(r => `<tr>
+        <td><b>${r[0]}</b></td><td>${rtl?r[1]:r[1]}</td><td>${r[2]}</td>
+        <td class="num"><b>${r[3]}</b></td><td>${r[4]}</td>
+        <td><span class="state ${r[5]==='Paid'?'ok':r[5]==='Waiting'?'wait':''}">${
+          rtl ? ({Paid:'مدفوعة',Waiting:'بانتظار',Draft:'مسودة'}[r[5]]) : r[5]}</span></td></tr>`).join('')}</tbody>
+    </table></div>`;
+    return;
+  }
+  $('#work').innerHTML = cp + `<div class="views"><div class="sheet">
+    <h1>INV/2026/0042</h1>
+    <div class="sub">${rtl?'مدينة الرياض للتجارة · ZATCA e-invoice · UUID 8f2c…91ab':'مدينة الرياض للتجارة · ZATCA e-invoice · UUID 8f2c…91ab'}</div>
+    <div class="statusbar-pills">
+      ${(rtl?['مسودة','مرسلة','مدفوعة']:['Draft','Sent','Paid']).map((p,i)=>`<span class="pill" aria-current="${i===2}">${p}</span>`).join('')}
+    </div>
+    <div class="tabs">${(rtl?['بنود الفاتورة','معلومات أخرى']:['Invoice Lines','Other Info']).map((t,i)=>`<span aria-current="${i===0}">${t}</span>`).join('')}</div>
+    <div class="grid2">
+      <div class="f"><label>${rtl?'العميل':'Customer'}</label><div class="v">مدينة الرياض للتجارة</div></div>
+      <div class="f"><label>${rtl?'تاريخ الفاتورة':'Invoice Date'}</label><div class="v">2026-09-02</div></div>
+      <div class="f"><label>${rtl?'الرقم الضريبي':'VAT'}</label><div class="v">300123456700003</div></div>
+      <div class="f"><label>${rtl?'تاريخ الاستحقاق':'Due Date'}</label><div class="v">2026-10-02</div></div>
+      <div class="f"><label>${rtl?'المجموع الفرعي':'Subtotal'}</label><div class="v money">10,782.61 SAR</div></div>
+      <div class="f"><label>${rtl?'ضريبة القيمة المضافة 15%':'VAT 15%'}</label><div class="v money">1,617.39 SAR</div></div>
+      <div class="f"><label>${rtl?'الإجمالي':'Total'}</label><div class="v money"><b>12,400.00 SAR</b></div></div>
+      <div class="f"><label>${rtl?'حالة الفاتورة الضريبية':'ZATCA status'}</label><div class="v" style="color:var(--glow)">${rtl?'مقبولة · مُبلَّغ عنها':'Accepted · reported'}</div></div>
+    </div>
+  </div></div>`;
+}
+
+function renderChatter(){
+  const on = state.chatter === 'on';
+  const c = $('#content');
+  c.dataset.chatter = on ? 'on' : 'off';
+  $('#chatter').style.display = on ? 'flex' : 'none';
+  $('#anno-chatter').style.opacity = on ? '' : '0';
+  if(!on) return;
+  const rtl = state.dir === 'rtl';
+  $('#chatter').innerHTML = `
+    <div class="ch"><b>${rtl?'الرسائل':'Messages'}</b><span>${rtl?'الأنشطة':'Activities'}</span><span>${rtl?'الملفات':'Files'}</span></div>
+    <div class="msg"><span class="av">AM</span><div><div class="who">Ahmed <span class="when">2 ${rtl?'ساعة':'hours'} ${rtl?'':'ago'}</span></div>
+      <p>${rtl?'أرسلنا الفاتورة إلى بوابة ZATCA وتم القبول. مرفق ملف XML.':'Invoice submitted to ZATCA and accepted. XML attached.'}</p></div></div>
+    <div class="msg"><span class="av" style="background:var(--teal)">S</span><div><div class="who">System <span class="when">${rtl?'أمس':'yesterday'}</span></div>
+      <p>${rtl?'تم تأكيد الدفعة الجزئية 4,000.00 ريال.':'Partial payment confirmed — SAR 4,000.00.'}</p></div></div>
+    <div class="msg"><span class="av" style="background:var(--gold)">N</span><div><div class="who">Noura <span class="when">${rtl?'قبل ٣ أيام':'3 days ago'}</span></div>
+      <p>${rtl?'يرجى إرفاق أمر الشراء قبل الإرسال.':'Please attach the purchase order before sending.'}</p></div></div>
+    <div style="margin:auto 12px 12px;border:1px dashed var(--border);border-radius:10px;padding:12px;color:var(--faint);font-size:12px;text-align:center">
+      ${rtl?'اكتب رسالة…':'Log a note…'}</div>`;
+}
+
+function renderStatusbar(){
+  const app = state.app ? APP[state.app] : null;
+  const rtl = state.dir === 'rtl';
+  $('#sb-left').textContent = 'acczed' + (app ? ' · ' + label(app) : '');
+  $('#sb-mid').textContent = state.dataset === 'today'
+    ? (rtl?'٤٢ وحدة مثبَّتة':'42 modules installed')
+    : (rtl?'بيانات توضيحية — الوحدات غير مثبَّتة':'illustrative — those apps are not installed');
+  $('#sb-right').textContent = rtl ? '⟳ متزامن · عربي (ar_001) · EN' : '⟳ synced · عربي (ar_001) · EN';
+}
+
+function renderAnno(){
+  const s = getComputedStyle($('#shell'));
+  $('#anno-panel').textContent = 'sidebar · sections → apps → trees · '
+    + s.getPropertyValue('--panel-w').trim() + ' (VS Code panel min 170)';
+  $('#anno-top').textContent = 'top bar 35 · breadcrumbs + ⌘K';
+  $('#anno-status').textContent = 'status bar 22';
+  $('#anno-chatter').textContent = 'chatter ~~30% — the 1366px squeeze';
+}
+
+function render(){
+  const shell = $('#shell');
+  shell.dataset.density = state.density;
+  shell.dataset.palette = state.palette;
+  /* The rail is gone, so the sidebar is the only navigation: at the 1366px squeeze it NARROWS
+     (172px) rather than vanishing. Hiding it completely stays a deliberate act — the ☰ toggle. */
+  shell.dataset.squeeze = (state.chatter === 'on' && state.density === 'default') ? 'true' : 'false';
+  shell.dataset.panel = (state.panelLock === null || state.panelLock) ? 'open' : 'collapsed';
+  $('#ptoggle').dataset.panel = shell.dataset.panel;
+  $('#ptoggle').title = shell.dataset.panel === 'collapsed' ? 'Show navigation' : 'Hide navigation';
+  const frame = $('#frame');
+  frame.dir = state.dir;
+  frame.dataset.annotate = state.annotate;
+  frame.style.width = state.size === '1920' ? '1920px' : '1366px';
+  frame.style.height = state.size === '1920' ? '1080px' : '768px';
+  renderPanel(); renderCrumbs(); renderWork(); renderChatter(); renderStatusbar(); renderAnno(); fit();
+}
+
+function fit(){
+  const available = document.querySelector('.stage').clientWidth - 44;
+  const w = state.size === '1920' ? 1920 : 1366;
+  const h = state.size === '1920' ? 1080 : 768;
+  const scale = Math.min(1, available / w);
+  const f = $('#frame');
+  f.style.transform = `scale(${scale})`;
+  f.parentElement.style.width = (w * scale) + 'px';
+  f.parentElement.style.height = (h * scale) + 'px';
+}
+
+/* ============================ events ============================ */
+document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const set = seg.dataset.set;
+  state[set] = b.dataset.v;
+  seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  if(set === 'dataset'){ state.app = null; state.open = {}; state.secOpen = {}; }
+  render();
+}));
+
+$('#shell').addEventListener('click', e => {
+  if(e.target.closest('#ptoggle')){
+    state.panelLock = ($('#shell').dataset.panel === 'collapsed');
+    render(); return;
+  }
+  const secHead = e.target.closest('[data-sechead]');
+  if(secHead){
+    const id = secHead.dataset.sechead;
+    state.secOpen[id] = (state.secOpen[id] === false);   // undefined = open
+    render(); return;
+  }
+  const row = e.target.closest('[data-app]');
+  if(row){
+    const id = row.dataset.app;
+    state.open[id] = !state.open[id];       // expand / collapse the app's menu in place
+    state.app = id;                         // and make it the current screen
+    render(); return;
+  }
+  const node = e.target.closest('[data-node]');
+  if(node){ const k = node.dataset.node; state.open[k] = !state.open[k]; render(); }
+});
+$('#work').addEventListener('dblclick', () => { state.view = state.view === 'list' ? 'form' : 'list'; render(); });
+$('#crumbs').addEventListener('click', () => {});
+/* ---- shareable state via URL:
+   ?dataset=full&section=finance&app=account&density=compact&chatter=on&dir=rtl&view=form&palette=desaturated ---- */
+const qs = new URLSearchParams(location.search);
+['density','palette','extras','dataset','chatter','dir','size','annotate','view'].forEach(k => {
+  const v = qs.get(k); if(v !== null) state[k] = v;
+});
+if(qs.get('app')){ state.app = qs.get('app'); state.open[state.app] = true; }   // open its menu for the shot
+if(qs.get('closed')) JSON.parse(qs.get('closed')).forEach(id => { state.secOpen[id] = false; });
+document.querySelectorAll('.seg').forEach(seg => {
+  const v = state[seg.dataset.set];
+  if(v === undefined) return;
+  seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === String(v)));
+});
+
+/* view switcher for the demo screens (list ⇄ form) */
+const vs = document.createElement('div'); vs.className='seg'; vs.style.marginInlineStart='auto';
+vs.innerHTML = '<button data-v="list" aria-pressed="true">List</button><button data-v="form">Form + chatter</button>';
+document.querySelector('.toolbar').appendChild(vs);
+vs.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return;
+  state.view = b.dataset.v; vs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x===b)); render(); });
+vs.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.v === state.view));
+
+window.addEventListener('resize', fit);
+render();
+</script>
+</body>
+</html>

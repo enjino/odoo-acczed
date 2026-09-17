@@ -9,8 +9,8 @@ Both are binding; if a file breaks one, fix the file.
 ACC-<phase letter><two-digit number>
 ```
 
-- `ACC-A01`, `ACC-B07`, `ACC-C03`, `ACC-E06` …
-- The letter is the phase (A–G), the number is the order inside that phase (starting at 01, zero-padded).
+- `ACC-A01`, `ACC-B07`, `ACC-C03`, `ACC-E06`, `ACC-I01` …
+- The letter is the phase (A–I), the number is the order inside that phase (starting at 01, zero-padded).
 - Identifiers are **never reused and never renumbered**: insert a new task in between as `ACC-C03b` and move
   on (renumbering breaks every commit message and cross-reference).
 
