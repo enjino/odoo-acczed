@@ -99,6 +99,9 @@ Update the status **in the phase table of `README.md` and in the task header** �
 5. Every visual change ships with before/after screenshots.
 6. No hardcoded `left`/`right` in SCSS — logical properties or `/*rtl:ignore*/`.
 7. No secrets in the repo — `odoo.conf` locally, server-side `.env` in production.
+8. Never hand-edit a generated token region — `tokens.json` is the source, and `scripts/gen-tokens.mjs`
+   owns whatever sits between the `acczed:tokens:start` / `acczed:tokens:end` markers (added 2026-09-17
+   by ACC-F02).
 
 ## 8. Done-gate for any feature task (phase G onwards)
 
