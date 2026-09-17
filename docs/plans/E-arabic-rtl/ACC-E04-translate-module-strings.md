@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | E — Arabic and RTL |
-| **Status** | ✅ done 2026-09-15 — **the mechanism, not a translation.** `acczed_theme` authors zero user-visible strings today (proved: a 0-byte POT), so there was nothing to translate. The check now exists and is wired into the harness; translating happens per-task under CONVENTIONS §8. |
+| **Status** | ✅ done 2026-09-15 — **the mechanism, not a translation.** `acczed_theme` authors zero user-visible strings today (proved: a 0-byte POT), so there was nothing to translate. The check exists and is wired into the harness; its third-source fix (added 2026-09-15, found by ACC-C04) was **removed with the reverted phase-C implementation on 2026-09-17** — see *Correction* below. Translating happens per-task under CONVENTIONS §8. |
 | **Depends on** | ACC-E02 |
 | **Estimated** | half a day |
 | **Touches** | `acczed-addons/acczed_theme/i18n/ar.po` |
