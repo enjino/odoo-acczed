@@ -22,8 +22,46 @@ citing them as done:**
 - **ACC-E05 was re-scoped.** Its stated job (backend Inter stack) described a problem that did not
   exist; the real one was reports fetching Arabic glyphs from `fonts.odoocdn.com`.
 
-**Next up: phase C (Dark Space Botanical backend theme), starting at ACC-C01** — which now also carries
-E03's re-homed SCSS direction audit.
+**Next up: phase I (UI shell redesign)** — a new track opened 2026-09-15. The redesign is a **re-layout**,
+not a recolour, and it starts from **stock Odoo colours**: the whole phase-C implementation was
+**reverted on 2026-09-17** (dated block below), so ACC-C01…C04 are ⏳ again and phase C restarts from
+ACC-C01 if and when it resumes — against the new shell, not the old one.
+**ACC-H (roles console) should land on the new shell**, or its screens get written twice.
+
+### ✅ Recorded 2026-09-15 — the UI redesign round
+
+| # | Decision (user, 2026-09-15) |
+|---|---|
+| 1 | **The redesign is a re-layout**, not a recolour — new navigation model, own components, departs from Odoo's layout paradigm |
+| 2 | **Own all renderers** — no Odoo view is left un-owned. Budget: 34,050 LOC JS of renderers + 13,487 LOC of field layer + a 227,808-LOC test net that only guards Odoo's originals |
+| 3 | **Navigation paradigm: a persistent left side menu, Figma/Notion-style** — resolved as D1 into a **single sidebar**: section headings → apps → menu trees. A separate icon rail was designed and then **removed the same day** |
+| 4 | **The marketing site keeps its layout**; only its tokens follow the theme (ACC-F01…F03 stay the token pipe) |
+| 5 | **Design spec and mockups before any code** — matches the DAC+S methodology |
+| 6 | **Reference design language: VS Code's workbench** (2026-09-15) — sidebar + command centre, compact density, floating inset panels, geometry driven by CSS custom properties. Metrics read from the VS Code source, not from memory: named width states (our sidebar 280 → 236 → 172), panel minimum 170px, status bar 22px, title bar 35px |
+| 7 | **Menu sections: apps are grouped into admin-authored, company-wide sections — grouping and order only** (no permission semantics). The sidebar stays menus-only; live business records (e.g. project rows) do **not** appear in it |
+| 8 | **Shape (D1): ONE sidebar** — collapsible section headings → apps (icon + label) → each app's menu tree expanding inline. Click depth stays 2, the same as Odoo today; at the 1366px squeeze the sidebar **narrows to 172px** rather than disappearing |
+
+Open at ACC-I04: whether the 172px squeeze is enough at 1366px with chatter open, or the chatter must become
+a drawer (D2) · pinned/recents/⌘K extras (D3) · the palette — keep Dark Space Botanical's saturated green
+glow, or adopt VS Code's desaturated-accent philosophy (D4). Sections need no icon set of their own: they
+are headings inside the sidebar.
+
+Written up in [I-ui-shell/ACC-I01](I-ui-shell/ACC-I01-ui-shell-design-spec.md), with the parity
+checklist in [ACC-I02](I-ui-shell/ACC-I02-arch-parity-checklist.md) and the compatibility policy in
+[ACC-I03](I-ui-shell/ACC-I03-compatibility-policy.md).
+
+### ✅ Recorded 2026-09-17 — the phase-C implementation was reverted
+
+**Decision (user, 2026-09-17):** return the module to the code it had **before** phase C was implemented;
+the 2026-09-15 build is removed and phase C restarts from ACC-C01 when it resumes.
+
+| Surface | What happened |
+|---|---|
+| `acczed-addons` | four `git revert` commits on top of `eff8beb` (`ab954da` C03 · `d0e92bf` C04 · `205094a` C02 · `bbdcfe8` C01). `git diff 13b729d HEAD --stat` → **empty**: the module is byte-identical to its pre-C state. Deleted: `_acczed_variables.scss`, `models/ir_http.py`, the systray toggle, `i18n/ar.po`. Kept: the B03 skeleton and ACC-E05's self-hosted report fonts |
+| `odoo-acczed` | the four C task files are back to their as-designed text, each with a built→reverted status line; `tools/theme-check.js` deleted; the C04 third-source hunks in `tools/i18n-coverage.py` / `tools/verify-rtl.sh` reverted (their third source was the deleted `i18n/ar.po`) |
+| Runtime | `-u acczed_theme` → `ir_module_module.latest_version` **19.0.0.1.4 → 19.0.0.1.1**; `grep -c assets_web_dark` on `/web/login` → **0** (was 1); no `.o_acczed_scheme_toggle` in the page; `verify-rtl.sh` → 11 passed, 0 failed |
+| Evidence | the themed shots are kept and relabelled **withdrawn**; `after-c-revert-backend-home.png` is the stock-Odoo frame; the record is in `evidence/evidence.log` |
+| Still intact | the phase-C **design** — issues #16–#21 carry the pre-implementation task text, and the decisions above (always dark + toggle, print stays light) stay as decisions, now unbuilt |
 
 > ⚠️ This is a shallow Odoo fork: a re-clone deletes anything not tracked by git. `docs/` is now
 > committed (commit `4016a0cd`), so the plan and its evidence survive — but anything added under
@@ -45,11 +83,21 @@ E03's re-homed SCSS direction audit.
 | **F** | [F-token-sync/](F-token-sync/) | Single token source + site copy parity — One tokens.json generating both surfaces, and marketing copy audited against reality. | one token change reaches both surfaces, no unsupported live badge | ⏳ |
 | **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented | 🅿️ |
 | **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode | ⏳ |
+| **I** | [I-ui-shell/](I-ui-shell/) | UI shell redesign — persistent Figma/Notion-style side navigation, our own shell and view renderers, an interface no other Odoo has. | design approved from mockups; every app installs and renders through the new UI or falls back explicitly (never silently) | 🚧 |
 
-Execution order: A → B → **E** → C → D → F (E before C because an Arabic tour of a theme is cheaper
-than a theme tour twice; F last because it locks what C, D and E produced). G is parked by the user.
-**H** is the first feature track: ACC-H01–H09 build the roles & access console, ACC-H10 applies it to the
-auditor-restricted task tab that started it. H01 → H02 → {H03, H04} → {H05, H06, H07} → H08 → H09 → H10.
+Execution order: A → B → **E** → C → **I** → D → F (E before C because an Arabic tour of a theme is
+cheaper than a theme tour twice; **I before C's remaining waves and before D** because the shell decides
+what the views look like; F last because it locks what C, D and E produced). G is parked by the user.
+**H** is the first feature track, and it builds UI screens (ACC-H03, H05, H06, H07) — it should start
+from the new shell or its screens get written twice: ACC-H01–H09 build the roles & access console,
+ACC-H10 applies it to the auditor-restricted task tab that started it.
+H01 → H02 → {H03, H04} → {H05, H06, H07} → H08 → H09 → H10.
+
+**Phase I changes one inherited assumption:** the earlier order deferred the interface to the end, with C
+recolouring and D branding in place of a redesign. Phase I replaces "restyle component by component" with
+"own the shell and the renderers" — which is why the phase-C implementation was **reverted on
+2026-09-17**: ACC-C01…C04 are ⏳ again and the guard went with them, so phase C, when it resumes, styles
+the new shell once instead of the old one twice.
 
 **ACC-F04 is pulled out of that chain** (decision 4, 2026-09-14): the site currently ships three false
 `live` badges in public, so the copy fix runs as soon as ACC-A06 is done rather than waiting behind the
@@ -113,10 +161,10 @@ artifact, check whether either should be there at all before reordering them.
 
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
-| [ACC-C01](C-dark-theme/ACC-C01-map-tokens-to-scss-variables.md) | Map the site tokens onto Odoo SCSS variables | ACC-B05 | 45 min | ✅ |
-| [ACC-C02](C-dark-theme/ACC-C02-force-dark-color-scheme.md) | Make the dark bundle load by default | ACC-C01 | 30 min | ✅ |
+| [ACC-C01](C-dark-theme/ACC-C01-map-tokens-to-scss-variables.md) | Map the site tokens onto Odoo SCSS variables | ACC-B05 | 45 min | ⏳ |
+| [ACC-C02](C-dark-theme/ACC-C02-force-dark-color-scheme.md) | Make the dark bundle load by default | ACC-C01 | 30 min | ⏳ |
 | [ACC-C03](C-dark-theme/ACC-C03-dark-scss-overrides.md) | Style what variables cannot reach | ACC-C02 | 1–2 days | ⏳ |
-| [ACC-C04](C-dark-theme/ACC-C04-systray-color-scheme-toggle.md) | Add the colour-scheme toggle in the systray | ACC-C02 | 4 hrs | ✅ |
+| [ACC-C04](C-dark-theme/ACC-C04-systray-color-scheme-toggle.md) | Add the colour-scheme toggle in the systray | ACC-C02 | 4 hrs | ⏳ |
 | [ACC-C05](C-dark-theme/ACC-C05-identity-fine-tuning.md) | Fine-tune the identity details | ACC-C03 | 3 hrs | ⏳ |
 | [ACC-C06](C-dark-theme/ACC-C06-deploy-theme-to-production.md) | Deploy the theme to production | ACC-C05, ACC-B07 | 1 hr | ⏳ |
 
@@ -176,6 +224,21 @@ artifact, check whether either should be there at all before reordering them.
 | [ACC-H08](H-roles-access/ACC-H08-permission-change-log.md) | Audit trail for permission changes | ACC-H03, ACC-H05, ACC-H06 | 1 day | ⏳ |
 | [ACC-H09](H-roles-access/ACC-H09-acceptance-and-escalation-tests.md) | Acceptance & escalation tests | ACC-H05, ACC-H06, ACC-H07 | 1 day | ⏳ |
 | [ACC-H10](H-roles-access/ACC-H10-first-consumer-auditor-tab.md) | First consumer: the auditor-restricted task tab | ACC-H04, ACC-H05 | 1 day | ⏳ |
+
+### Phase I — UI shell redesign
+
+| Task | Title | Depends on | Est. | Status |
+|---|---|---|---|---|
+| [ACC-I01](I-ui-shell/ACC-I01-ui-shell-design-spec.md) | Write the UI shell design spec (nav paradigm, layout contract, surfaces, identity) | — | 2 hrs | 🚧 |
+| [ACC-I02](I-ui-shell/ACC-I02-arch-parity-checklist.md) | Build the arch-parity checklist from the live corpus | ACC-I01 | 1.5 hrs | ✅ |
+| [ACC-I03](I-ui-shell/ACC-I03-compatibility-policy.md) | Lock the compatibility policy (what a new app inherits, what it can break) | ACC-I01 | 2 hrs | ✅ |
+| [ACC-I04](I-ui-shell/ACC-I04-shell-mockups.md) | Produce the shell mockups of the fixed D1 shape and close D2–D4 (density, extras, palette) | ACC-I01, ACC-I02, ACC-I03 | half a day | ⏳ |
+| [ACC-I05](I-ui-shell/ACC-I05-compat-spike.md) | Prove the compatibility policy with a probe (R1/R2/R4 against installed modules) | ACC-I03 | 2–3 hrs | ⏳ |
+
+**ACC-I06 and beyond (the implementation) are deliberately not written yet** — they are written from an
+approved ACC-I04, so that no renderer task rests on an unapproved look. The scope fence is ACC-I02 §3's
+demand table (list + form cover ~95% of the 186 window actions; pivot/graph/calendar/hierarchy serve 3–6
+actions each and may stay Odoo's for a long time).
 
 
 ---
