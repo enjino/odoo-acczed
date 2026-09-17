@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | **Phase** | F — Single token source + site copy parity |
-| **Status** | ⏳ not started |
-| **Depends on** | ACC-F02 |
+| **Status** | ⏳ not started — **blocked**: the Odoo surface needs ACC-F02b, which waits for ACC-C01 (phase C ⏳ since 2026-09-17). The site half alone would prove nothing — the point is both surfaces at once |
+| **Depends on** | ACC-F02, ACC-F02b |
 | **Estimated** | 30 min |
 | **Touches** | `docs/plans/evidence/` |
 

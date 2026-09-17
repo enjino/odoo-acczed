@@ -22,10 +22,12 @@ citing them as done:**
 - **ACC-E05 was re-scoped.** Its stated job (backend Inter stack) described a problem that did not
   exist; the real one was reports fetching Arabic glyphs from `fonts.odoocdn.com`.
 
-**Next up: phase I (UI shell redesign)** — a new track opened 2026-09-15. The redesign is a **re-layout**,
-not a recolour, and it starts from **stock Odoo colours**: the whole phase-C implementation was
-**reverted on 2026-09-17** (dated block below), so ACC-C01…C04 are ⏳ again and phase C restarts from
-ACC-C01 if and when it resumes — against the new shell, not the old one.
+**Now running: phase F (token sync) — the user's pick, 2026-09-17.** ACC-F01 (`tokens.json`) and
+ACC-F02 (the generator's **site** target) are done; **ACC-F02b parks behind ACC-C01**, so the backend's
+half of the token pipeline lands when phase C does, and **ACC-F06 (bilingual marketing site) is next**.
+Phases C and D stay deferred, and phase I's design stands as written: a **re-layout**, not a recolour,
+starting from **stock Odoo colours** (the phase-C implementation was **reverted on 2026-09-17** — dated
+block below), with **D2/D3/D4 still open** at ACC-I04.
 **ACC-H (roles console) should land on the new shell**, or its screens get written twice.
 
 ### ✅ Recorded 2026-09-15 — the UI redesign round
@@ -193,9 +195,10 @@ artifact, check whether either should be there at all before reordering them.
 
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
-| [ACC-F01](F-token-sync/ACC-F01-define-tokens-json.md) | Define tokens.json as the single source of truth | ACC-C01 | 1 hr | ⏳ |
-| [ACC-F02](F-token-sync/ACC-F02-token-generator-script.md) | Generate both outputs from tokens.json | ACC-F01 | 3 hrs | ⏳ |
-| [ACC-F03](F-token-sync/ACC-F03-verify-token-propagation.md) | Verify one token change reaches both surfaces | ACC-F02 | 30 min | ⏳ |
+| [ACC-F01](F-token-sync/ACC-F01-define-tokens-json.md) | Define tokens.json as the single source of truth | ACC-C01 | 1 hr | ✅ |
+| [ACC-F02](F-token-sync/ACC-F02-token-generator-script.md) | Generate both outputs from tokens.json — **site target done; the Odoo target is ACC-F02b** | ACC-F01 | 3 hrs | ✅ |
+| [ACC-F02b](F-token-sync/ACC-F02b-generate-the-odoo-variable-layer.md) | Generate the Odoo variable layer from tokens.json (**parked behind ACC-C01**) | ACC-C01 | 1 hr | ⏳ |
+| [ACC-F03](F-token-sync/ACC-F03-verify-token-propagation.md) | Verify one token change reaches both surfaces | ACC-F02, ACC-F02b | 30 min | ⏳ |
 | [ACC-F04](F-token-sync/ACC-F04-reconcile-site-copy.md) | Reconcile the marketing copy with the audited reality (**pulled forward — runs ahead of ACC-G03**) | ACC-A06 | 3 hrs | ✅ |
 | [ACC-F05](F-token-sync/ACC-F05-verify-signin-parity.md) | Verify sign-in parity between site and backend | ACC-D02 | 1 hr | ⏳ |
 | [ACC-F06](F-token-sync/ACC-F06-bilingual-marketing-site.md) | Build the marketing site bilingual (en + ar) | ACC-F04 | 1–2 days | ⏳ |
