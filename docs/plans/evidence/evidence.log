@@ -274,3 +274,18 @@
 2026-09-15 | FIX | tools/i18n-coverage.py now takes a third source, the module's own i18n/<lang>.po, and counts a term translated if EITHER source has it. verify-rtl.sh --check 5 passes it automatically.
 2026-09-15 | FIX FALSIFIED | pointing the third argument at a missing file -> FAIL 2/5 untranslated, exit 1. So the fix did not turn the check into one that always passes. Selftest still 7/7.
 2026-09-15 | LESSON | a check only ever run against empty input is not a working check, even when it later reports the right answer once. The E04 self-test had three deliberately failing fixtures and still shipped this, because they exercised the comparison rather than the plumbing that feeds it.
+2026-09-15 | google-chrome --headless=new --screenshot (9 states, 1366/1920) | docs/plans/I-ui-shell/mockups/acczed-shell-mockup.html renders all states; DOM check: 9 section buttons, 30 panel rows, 6 tree nodes, Arabic labels present
+2026-09-15 | grep -n 'left:\|right:' mockups/acczed-shell-mockup.html | zero hits — the shell mirrors from dir=rtl alone (CONVENTIONS §7.6)
+2026-09-15 | source data for the mockup | acczed DB: 143 menus, 6 roots, Settings 102 · Arabic labels read from ir_ui_menu.name jsonb; app icons referenced from addons/*/static/description/icon.png (mail, project, project_todo present; base ships NO icon files)
+2026-09-15 | mockup rebuilt without the icon rail | one sidebar: sections as collapsible headings → apps → inline menu trees; rail removed (48px + 1 extra click for no benefit, since the sidebar narrows to 172px at the squeeze instead of collapsing)
+2026-09-15 | google-chrome --headless --screenshot | i04b-01..09 rendered from mockups/acczed-shell-mockup.html: 9 states, rail absent (grep 'class="rail"' → 0 in the dumped DOM), 6 section headings, apps expand trees inline
+2026-09-15 | grep -rn rail docs/plans/*.md docs/plans/I-ui-shell/*.md | remaining hits are deliberate: the 'removed / no counterpart' notes in ACC-I01 §1, the D1 re-resolution row, and the i04-* evidence row for the withdrawn design
+
+# --- 2026-09-17 phase C reverted (user decision) ---
+2026-09-17 | DECISION | phase C returns to its pre-implementation code. The 2026-09-15 build is removed; ACC-C01..C04 go back to not-started and restart from C01 when phase C resumes. The design text survives in issues #16-#21 and in git history.
+2026-09-17 | git revert (acczed-addons, four commits) | ab954da (C03 w1) d0e92bf (C04) 205094a (C02) bbdcfe8 (C01). `git diff 13b729d HEAD --stat` -> EMPTY: the module is byte-identical to its pre-C state. E05's self-hosted report fonts and their manifest entry survive.
+2026-09-17 | odoo-bin -c odoo.conf -d acczed -u acczed_theme --stop-after-init | clean; ir_module_module.latest_version 19.0.0.1.4 -> 19.0.0.1.1
+2026-09-17 | curl -b "color_scheme=dark" /web/login (grep -c assets_web_dark) | 0 (was 1 before the revert); grep -c color_scheme_toggle -> 0
+2026-09-17 | node tools/shot.js /odoo/action-base.action_res_users | after-c-revert-backend-home.png (39138 B) — stock Odoo: light surfaces, purple navbar, no toggle. after-c01-backend-home.png kept as the record of the removed theme (relabelled withdrawn)
+2026-09-17 | bash tools/verify-rtl.sh | 11 passed, 0 failed — including seam 5 "0 authored terms — nothing to translate yet (vacuous, not a pass)"
+2026-09-17 | fork | tools/theme-check.js deleted; tools/i18n-coverage.py + tools/verify-rtl.sh reverted to their pre-C04 shape (the third source read the deleted i18n/ar.po); C01-C04 task files restored from 122c7b8c with built->reverted status lines; README, ACC-I01 and ACC-E04 updated to match

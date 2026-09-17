@@ -28,7 +28,7 @@ Make the drift impossible by machine: the site CSS block and the Odoo SCSS block
   ```bash
   node scripts/gen-tokens.mjs
   # writes: acczed-site/app/globals.css (:root region)
-  #         acczed_theme/static/src/scss/_acczed_variables.scss
+  #         acczed_theme/static/src/scss/_acczed_variables.scss   (ACC-C01's file — reverted 2026-09-17; recreated when phase C restarts)
   ```
   → expected: both files updated
 - [ ] **3. Guard against overwriting hand-written CSS**

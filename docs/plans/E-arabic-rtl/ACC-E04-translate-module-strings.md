@@ -102,11 +102,14 @@ The guard only ever appeared to work because the module authored zero terms when
 then it *did* correctly catch the two new strings, which made it look healthy right up to the point
 where no translation could satisfy it.
 
-**Fixed** in `tools/i18n-coverage.py`: a third source, the module's own `i18n/<lang>.po`, is merged in,
-and a term counts as translated if either source has it. `verify-rtl.sh --check 5` passes it
-automatically. Re-verified: the 7 self-test fixtures still behave, the real module now reports
-`all 5 authored terms translated`, and pointing the third argument at a missing file makes it fail
-again (2/5 untranslated) — so the fix did not turn it into a check that always passes.
+**Fixed 2026-09-15 — then removed 2026-09-17**, with the reverted phase-C implementation: the third
+source (in `tools/i18n-coverage.py` and `verify-rtl.sh`) went with the `i18n/ar.po` it read. The module
+authors no user-visible strings again — the harness reports `0 authored terms — nothing to translate yet
+(vacuous, not a pass)` — so the two-source check is correct as it stands. The fix itself stays readable at
+`8f8406bd` in this repo's history: **re-apply it the moment the module next authors a JS or QWeb string**,
+which phase D is the first group expected to do. Before removal it was re-verified — the 7 self-test
+fixtures behaved, the module reported `all 5 authored terms translated`, and a missing third source
+failed again (2/5 untranslated).
 
 **The lesson:** a check that has only ever been run against an empty input is not a working check, even
 when it later reports the right answer once. This one had a self-test with three deliberately failing
