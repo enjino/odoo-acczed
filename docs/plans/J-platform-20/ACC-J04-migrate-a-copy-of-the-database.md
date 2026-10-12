@@ -35,12 +35,16 @@ named, before the real database is migrated.
   ```bash
   ln -s acczed ~/.local/share/odoo-acczed/filestore/acczed_p20
   ```
-- [ ] **3. Cross-check installed modules against the 20.0 tree**
+- [x] **3. Cross-check installed modules against the 20.0 tree** — **already done 2026-10-12, and it
+      passes**: of the 42 installed modules, the only one absent from the 20.0 tree is `acczed_theme`
+      itself (our own, in the sibling repo). Nothing installed is dropped by 20.0, so there is no
+      missing-module blocker. The check was run against the GitHub directory listing for `addons/` +
+      `odoo/addons/` at `20.0` (658 module dirs) rather than a local tree.
   ```bash
   comm -23 <(cut -d'|' -f1 ~/backups/odoo-acczed/20261012-121926/acczed-installed-modules.txt | sort) \
            <(ls addons odoo/addons | sort -u)
   ```
-  → expected: empty. Any name printed is installed here and absent from 20.0
+  → expected: `acczed_theme` only. Any other name printed is installed here and absent from 20.0
 - [ ] **4. Run the upgrade on the copy**
   ```bash
   bash run-odoo.sh stop

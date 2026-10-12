@@ -25,6 +25,28 @@ no document claims a 20-era fact it never measured.
   merged into a parent module rather than dropped.
 - `grep -l` (files) and `grep -o` (occurrences) disagree; a partial-list sum was once 5× off the real
   surface. Counts must be labelled as raw-text lower bounds, not parses.
+- The two addons roots moved modules between them: `odoo/addons/` has **24 dirs at 19.0 and 16 at
+  20.0**. The 13 that left are all `test_*` (`test_orm`, `test_rpc`, `test_read_group`,
+  `test_access_rights`, …) and none of them reappear under `addons/`; 5 new `test_*` dirs
+  (`test_base`, `test_l10n`, `test_tests`, `test_translation`, `test_web`) replace them. All are test
+  scaffolding — **none is installed in `acczed`** — so this move does not touch the migration. It does
+  matter for the docs: any `file:line` reference that pointed into a removed `test_*` module is dead.
+
+## Pre-pass (done 2026-10-12, before the clone existed — raw-file checks against `20.0`)
+
+The five facts that phases C, D and E are built on were re-read from the 20.0 tree and **all five still
+hold**, so no phase-C/D/E mechanism is invalidated by the move:
+
+| README fact | 19.0 | 20.0 | Verdict |
+|---|---|---|---|
+| #2 the accent feeding `$o-brand-primary` / `$o-action` | `$o-community-color: #71639e` | `#71639e`, same three-line chain | unchanged |
+| #4 `web.assets_web_dark` bundle exists in web's manifest | present | present | unchanged |
+| #5 `ir.http.color_scheme()` returns a hardcoded `"light"` | `def color_scheme(self): return "light"` | **identical** | unchanged — phase C's override still applies |
+| #9 asset compilation shells out to `rtlcss` | 6 occurrences in `assetsbundle.py` | 6 occurrences | unchanged |
+| #8 login page shows favicon, "Powered by", "Manage Databases" | present | present | unchanged — phase D's targets still exist |
+
+`addons/web/static/src/scss/` holds 24 entries at 19.0 and 23 at 20.0 — the remaining count work is
+step 1 below.
 
 ## Steps
 - [ ] **1. Re-run every count in README §"Baseline facts"** against the `20.0` tree
