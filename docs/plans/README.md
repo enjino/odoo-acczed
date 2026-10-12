@@ -262,7 +262,7 @@ actions each and may stay Odoo's for a long time).
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
 | [ACC-J01](J-platform-20/ACC-J01-freeze-the-ground-truth.md) | Freeze the pre-move ground truth (dumps + filestore + in-flight diffs) | — | 30 min | ✅ |
-| [ACC-J02](J-platform-20/ACC-J02-deepen-history-and-branch-20.md) | Deepen the fork's history and create the `20.0` branch | ACC-J01 | 1–2 hrs | 🚧 |
+| [ACC-J02](J-platform-20/ACC-J02-deepen-history-and-branch-20.md) | Deepen the fork's history and create the `20.0` branch | ACC-J01 | 1–2 hrs | ✅ |
 | [ACC-J03](J-platform-20/ACC-J03-environment-for-20.md) | Environment for 20: a second venv, branch-aware `run-odoo.sh` | ACC-J02 | 1 hr | ⏳ |
 | [ACC-J04](J-platform-20/ACC-J04-migrate-a-copy-of-the-database.md) | Migrate a copy of the database first | ACC-J03 | 3 hrs | ⏳ |
 | [ACC-J05](J-platform-20/ACC-J05-port-acczed-theme-to-20.md) | Port `acczed_theme` to 20 (manifest version + every cited path re-checked) | ACC-J04 | half a day | ⏳ |
