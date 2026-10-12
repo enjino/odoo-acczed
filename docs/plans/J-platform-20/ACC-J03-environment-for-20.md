@@ -20,8 +20,20 @@ the branch it is serving, so 19.0 stays runnable for production parity.
   **not** want the same package set.
 - `run-odoo.sh:10` hardcodes `VENV="$HOME/Desktop/Projects/odoo-acczed-venv/.venv"`, and the script is
   tracked, so branch `20.0` can carry a branch-aware version without touching `19.0`.
-- The two-process model still has to be re-proved on 20: `odoo.evented` is gated on `argv[1] == 'gevent'`
-  and the config key is `gevent_port` (not the removed `longpolling_port`).
+- The two-process model **survives** on 20 — re-checked 2026-10-12 against the 20.0 tree:
+  `odoo/_monkeypatches/site.py` still gates on `if odoo.evented or not (len(sys.argv) > 1 and
+  sys.argv[1] == 'gevent')`, and `odoo/tools/config.py` still defines `gevent_port` with no
+  `longpolling_port` (1 vs 0 occurrences, same as 19.0).
+- **`run-odoo.sh`'s readiness check is broken by 20, and this is the fix.** Lines 37-38 wait for two log
+  strings that no longer exist:
+  - 19.0 `odoo/service/server.py:283` `'HTTP service (werkzeug) running on %s:%s'` → 20.0
+    `odoo/service/server.py:485` **`"HTTP service running on %s:%s"`** (the `(werkzeug)` is dropped)
+  - 19.0 `:868` `'Evented Service (longpolling) running on %s:%s'` → **gone in 20.0**. The
+    `GeventServer` class survives and still reads `config['gevent_port']`, but the only longpolling log
+    line left is a `_logger.critical` error path.
+  So on 20 the loop would spin all 45 seconds and print "Not confirmed ready yet" with both servers
+  actually up — a false negative, not a failure to start. Replace the grep with a wait on
+  `"HTTP service running on"` plus a direct probe of :8072.
 
 ## Steps
 - [ ] **1. Create the second venv (Python 3.12)**
