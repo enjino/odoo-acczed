@@ -10,6 +10,15 @@ genuinely mirrored across four measured seams, the translation-coverage check bu
 off Odoo's font CDN. Every fact quoted in these tasks was verified from the live code and the running
 database on 2026-09-14, with a `file:line` reference so it can be re-checked.
 
+**Platform move (2026-10-12): phase J — Odoo 19.0 → 20.0.** Odoo 20 was released in September 2026
+(`odoo.com/page/release-notes`; upstream ref `refs/heads/20.0` → `65028bb2`, `odoo/release.py` →
+`version_info = (20, 0, 0, FINAL, 0, '')`). The user chose to move the **platform**, not just the docs, and
+to keep all three version layers in step: the fork's tag, the `acczed_theme` manifest version, and the
+docs/site version line. Phase J is written below and started — **ACC-J01 (the pre-move backup) is done,
+ACC-J02 (history + the `20.0` branch) is running**. Nothing above is retracted: **`19.0` stays the branch
+production runs** until ACC-J09's window, so every 19.0 measurement quoted here is still what
+`backend.acczed.online` serves.
+
 **Phase E's gate is met:** `ar_001` active, `dir=rtl` verified, rtlcss installed and on the PATH — the
 last of those still holds **locally only**; the production half is written into the ACC-B07 runbook and
 not yet executed.
@@ -86,10 +95,15 @@ the 2026-09-15 build is removed and phase C restarts from ACC-C01 when it resume
 | **G** | [G-features-backlog/](G-features-backlog/) | Features backlog (parked by user) — Home for the functional/feature decisions when the user opens that track. | decisions recorded by the user; nothing implemented | 🅿️ |
 | **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode | ⏳ |
 | **I** | [I-ui-shell/](I-ui-shell/) | UI shell redesign — persistent Figma/Notion-style side navigation, our own shell and view renderers, an interface no other Odoo has. | design approved from mockups; every app installs and renders through the new UI or falls back explicitly (never silently) | 🚧 |
+| **J** | [J-platform-20/](J-platform-20/) | Platform move: Odoo 19.0 → 20.0 — fetch upstream 20.0, replay our delta on a `20.0` branch, migrate the database, re-prove B/E/F on 20, align the three version layers. | branch `20.0` runs, a migrated copy of `acczed` is green, B/E/F re-proved on 20, and the fork tag + manifest + docs all say 20.0 | 🚧 |
 
 Execution order: A → B → **E** → C → **I** → D → F (E before C because an Arabic tour of a theme is
 cheaper than a theme tour twice; **I before C's remaining waves and before D** because the shell decides
 what the views look like; F last because it locks what C, D and E produced). G is parked by the user.
+
+**J (the platform move to Odoo 20) runs before I's implementation and before C resumes** — both rest on
+19.0 measurements that ACC-J07 has to re-take, and the fork has drifted 726 commits on 19.0 and 18,643 on
+20.0 since those measurements were taken.
 **H** is the first feature track, and it builds UI screens (ACC-H03, H05, H06, H07) — it should start
 from the new shell or its screens get written twice: ACC-H01–H09 build the roles & access console,
 ACC-H10 applies it to the auditor-restricted task tab that started it.
@@ -242,6 +256,29 @@ artifact, check whether either should be there at all before reordering them.
 approved ACC-I04, so that no renderer task rests on an unapproved look. The scope fence is ACC-I02 §3's
 demand table (list + form cover ~95% of the 186 window actions; pivot/graph/calendar/hierarchy serve 3–6
 actions each and may stay Odoo's for a long time).
+
+### Phase J — Platform move: Odoo 19.0 → 20.0
+
+| Task | Title | Depends on | Est. | Status |
+|---|---|---|---|---|
+| [ACC-J01](J-platform-20/ACC-J01-freeze-the-ground-truth.md) | Freeze the pre-move ground truth (dumps + filestore + in-flight diffs) | — | 30 min | ✅ |
+| [ACC-J02](J-platform-20/ACC-J02-deepen-history-and-branch-20.md) | Deepen the fork's history and create the `20.0` branch | ACC-J01 | 1–2 hrs | 🚧 |
+| [ACC-J03](J-platform-20/ACC-J03-environment-for-20.md) | Environment for 20: a second venv, branch-aware `run-odoo.sh` | ACC-J02 | 1 hr | ⏳ |
+| [ACC-J04](J-platform-20/ACC-J04-migrate-a-copy-of-the-database.md) | Migrate a copy of the database first | ACC-J03 | 3 hrs | ⏳ |
+| [ACC-J05](J-platform-20/ACC-J05-port-acczed-theme-to-20.md) | Port `acczed_theme` to 20 (manifest version + every cited path re-checked) | ACC-J04 | half a day | ⏳ |
+| [ACC-J06](J-platform-20/ACC-J06-re-verify-phases-b-e-f-on-20.md) | Re-verify phases B, E and F on 20 | ACC-J05 | half a day | ⏳ |
+| [ACC-J07](J-platform-20/ACC-J07-re-measure-the-19-specific-baselines.md) | Re-measure the 19-specific baselines (14 facts, phase-I mechanics, matrix) | ACC-J02 | 3 hrs | ⏳ |
+| [ACC-J08](J-platform-20/ACC-J08-align-the-three-version-tags.md) | Align the three version tags (fork tag, manifest, docs/site) | ACC-J04, ACC-J05, ACC-J06 | 1 hr + upload | ⏳ |
+| [ACC-J09](J-platform-20/ACC-J09-upgrade-production-to-20.md) | Upgrade production to 20 (**gated: snapshot + window**) | ACC-J08 | 1 day | 🅿️ |
+
+**Why J is a phase and not a chore:** the fork's own delta is only `docs/**`, `tools/**`, `run-odoo.sh`,
+`.gitignore` and `logs/.gitkeep` — **zero files under `addons/` or `odoo/`** — so the *merge* is nearly
+free. What is not free is everything measured against 19.0: the 14 baseline facts, phase I's renderer and
+template counts, the enterprise matrix, and the module listing (638 directories in 19.0 → 642 in 20.0,
+53 added / 49 removed in a raw listing). ACC-J07 owns re-taking those; a changed count that invalidates a
+phase-I design decision goes back to ACC-I04 rather than into a silent edit.
+
+**Order:** J01 → J02 → {J03 → J04 → J05 → J06, J07} → J08 → (J09, gated).
 
 
 ---
