@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Phase** | H — Roles & access console |
-| **Status** | ⏳ not started |
+| **Status** | 🟡 in progress — module + the two role groups landed; Access Manager group and the console menu still open |
 | **Depends on** | ACC-H01 |
 | **Estimated** | 2 hrs |
 | **Touches** | `acczed-addons/acczed_access/` (new module) |
@@ -11,6 +11,25 @@
 ## Goal
 
 Stand up the console's module with its own group and a menu that is reachable **without developer mode** — the whole point of the feature.
+
+## Progress (2026-10-15)
+
+The module exists and is installed: `acczed_access` (`__init__.py`, `models/__init__.py`,
+`__manifest__.py`, `security/acczed_access_security.xml`, `security/ir.model.access.csv`), version
+`20.0.0.1.0`, `depends: ['project']`, `application: False` until the menu exists.
+
+It declares **the two auditor roles** — `group_auditor_1` "First Auditor" (id 31) and `group_auditor_2`
+"Second Auditor" (id 32) — because the Recommendations tab needed a real audience: it had been gated to
+`project.group_project_manager` as a placeholder, which hid it from the auditors it exists for. The
+roles are plain `res.groups` with `comment` and `sequence`, `noupdate` deliberately unset.
+
+Verified after install (`-i acczed_access -u acczed_recommendations`, exit 0): 44 modules load
+(`acczed_theme` still the only unloaded one), `auditor1` holds First Auditor, `auditor2` holds Second
+Auditor, and the login matrix via `~/.hermes/scripts/odoo-tab-visibility.js` is admin ✅, auditor1 ✅,
+auditor2 ✅, normal1 ❌, internal_only ❌.
+
+Still open here: `group_access_manager` (step 2), the Access menu (step 3), the module's ACL csv once
+it owns a model (ACC-H01b's grants), and whether the roles join the existing "Project" privilege.
 
 ## Context (verified)
 

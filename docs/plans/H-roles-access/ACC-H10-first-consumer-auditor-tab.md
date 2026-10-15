@@ -13,12 +13,14 @@
 Apply the console to the feature that started this thread: a tab that only the auditor role — and any other roles the admin allows — can see on a task card.
 
 ## Context (verified)
-- **The tab is currently gated to `project.group_project_manager`** (`views/project_task_views.xml` in
-  `acczed_recommendations`, applied 2026-10-15 as an interim, presentation-only gate). Measured with
-  `~/.hermes/scripts/odoo-tab-visibility.js`: `normal1` (Project / User) sees `["Description","Sub-tasks"]`,
-  `admin` (Project / Administrator) sees `["Description","Recommendations","Sub-tasks"]`. H10 must *widen*
-  this to the product's roles, not add gating to an ungated page — and it should drop the interim
-  `groups=` once per-role visibility is driven from the registry, so there is one source of truth.
+- **The tab is currently gated to the auditor roles** (`views/project_task_views.xml` in
+  `acczed_recommendations`: `groups="acczed_access.group_auditor_1,acczed_access.group_auditor_2,project.group_project_manager"`,
+  applied 2026-10-15). It was first gated to `project.group_project_manager` alone, which hid it from the
+  auditors it exists for — the roles had to exist before the gate could mean anything. Measured with
+  `~/.hermes/scripts/odoo-tab-visibility.js`: admin ✅, auditor1 ✅, auditor2 ✅ (all see
+  `["Description","Recommendations","Sub-tasks"]`), `normal1` and `internal_only` ❌
+  (`["Description","Sub-tasks"]`). H10 replaces this hard-coded attribute with per-role visibility driven
+  from the roles console, so there is one source of truth instead of a `groups=` list to keep in sync.
 
 - The project task form already carries group-gated tabs; the pattern to copy is `addons/project/views/project_task_views.xml:518` (`groups="project.group_project_task_dependencies"`), and a third-party module doing the same is `addons/hr_timesheet/views/project_task_views.xml:43`.
 - The To-do card has **no notebook at all** (`addons/project_todo/views/project_task_views.xml:79-133`) — it is form fields plus the chatter panel widget at `:130`.

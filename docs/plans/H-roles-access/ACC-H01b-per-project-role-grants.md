@@ -52,7 +52,10 @@ company-wide — and the grant is enforced server-side, not merely hidden in the
   privilege (`project.res_groups_privilege_project`) holds **`Project / Administrator`**
   (`project.group_project_manager`) and **`Project / User`** (`project.group_project_user`) — measured in
   `acczed_p20`. The console therefore *surfaces* it instead of cloning it: a clone would need every ACL
-  and rule duplicated for the new group and still could not restrict anything.
+  and rule duplicated for the new group and still could not restrict anything. The two auditor groups
+  now exist as `acczed_access.group_auditor_1` / `group_auditor_2` (created 2026-10-15 with ACC-H02's
+  module skeleton; `auditor1` holds the first, `auditor2` the second), so the grants have something to
+  point at.
   ```bash
   acczed_access/models/acczed_role_grant.py
   acczed_access/security/ir.model.access.csv   # CRUD for group_access_manager only
