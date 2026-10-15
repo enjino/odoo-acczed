@@ -4,7 +4,7 @@
 |---|---|
 | **Phase** | H — Roles & access console |
 | **Status** | ⏳ not started |
-| **Depends on** | ACC-H04, ACC-H05 |
+| **Depends on** | ACC-H04, ACC-H05, ACC-H01b |
 | **Estimated** | 1 day |
 | **Touches** | `acczed-addons/acczed_project_audit/` (new) |
 
@@ -13,6 +13,12 @@
 Apply the console to the feature that started this thread: a tab that only the auditor role — and any other roles the admin allows — can see on a task card.
 
 ## Context (verified)
+- **The tab is currently gated to `project.group_project_manager`** (`views/project_task_views.xml` in
+  `acczed_recommendations`, applied 2026-10-15 as an interim, presentation-only gate). Measured with
+  `~/.hermes/scripts/odoo-tab-visibility.js`: `normal1` (Project / User) sees `["Description","Sub-tasks"]`,
+  `admin` (Project / Administrator) sees `["Description","Recommendations","Sub-tasks"]`. H10 must *widen*
+  this to the product's roles, not add gating to an ungated page — and it should drop the interim
+  `groups=` once per-role visibility is driven from the registry, so there is one source of truth.
 
 - The project task form already carries group-gated tabs; the pattern to copy is `addons/project/views/project_task_views.xml:518` (`groups="project.group_project_task_dependencies"`), and a third-party module doing the same is `addons/hr_timesheet/views/project_task_views.xml:43`.
 - The To-do card has **no notebook at all** (`addons/project_todo/views/project_task_views.xml:79-133`) — it is form fields plus the chatter panel widget at `:130`.
@@ -21,10 +27,13 @@ Apply the console to the feature that started this thread: a tab that only the a
 
 ## Steps
 
-- [ ] **1. Record the two decisions before any code**
+- [x] **1. Record the two decisions before any code** — recorded 2026-10-14
   ```bash
-  # (a) target card: project task form / to-do card
-  # (b) which surface the tab mirrors (same records, different audience - confirmed earlier)
+  # (a) target card: the PROJECT TASK FORM (view 620 project.view_task_form2). The to-do card is out:
+  #     it has no notebook at all (addons/project_todo/views/project_task_views.xml:79-133).
+  # (b) the surface it mirrors: the Recommendations tab shipped 2026-10-14 in acczed_recommendations
+  #     (page_recommendations on the same form) — same records, auditor audience. The gate is per project
+  #     (ACC-H01b), not one global group.
   ```
   → expected: both answered in this file
 - [ ] **2. Create the consumer module and declare its permission**

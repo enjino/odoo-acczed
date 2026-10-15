@@ -231,7 +231,9 @@ artifact, check whether either should be there at all before reordering them.
 
 | Task | Title | Depends on | Est. | Status |
 |---|---|---|---|---|
-| [ACC-H01](H-roles-access/ACC-H01-fix-the-permission-model.md) | Fix the permission model and scope before building | — | 2 hrs | ⏳ |
+| [ACC-H01](H-roles-access/ACC-H01-fix-the-permission-model.md) | Fix the permission model and scope before building | — | 2 hrs | ✅ |
+| [ACC-H01b](H-roles-access/ACC-H01b-per-project-role-grants.md) | Per-project role grants (a role on *this* project only) | ACC-H01, ACC-H02 | 1 day | ⏳ |
+| [ACC-H01c](H-roles-access/ACC-H01c-two-step-auditor-chain.md) | The two-step auditor chain (review → pass → approve) | ACC-H01b | 1–2 days | ⏳ |
 | [ACC-H02](H-roles-access/ACC-H02-module-skeleton.md) | Create the acczed_access module skeleton | ACC-H01 | 2 hrs | ⏳ |
 | [ACC-H03](H-roles-access/ACC-H03-roles-screen.md) | Build the Roles screen (create, edit, archive roles) | ACC-H02 | 1 day | ⏳ |
 | [ACC-H04](H-roles-access/ACC-H04-permission-registry.md) | Add the permission registry (features declare their own points) | ACC-H02 | 1 day | ⏳ |

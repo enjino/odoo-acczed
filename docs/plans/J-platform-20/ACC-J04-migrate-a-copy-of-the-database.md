@@ -112,6 +112,55 @@ merge scripts live on Odoo's side, which is precisely why the community tree shi
 **Recommendation: C**, with D as the honest fallback if the project/task chatter matters enough to be
 preserved exactly. A is the reading to avoid unless the migration itself is the deliverable.
 
+## Post-decision work, 2026-10-14 — the tail, measured
+
+Two defects found by a Playwright walkthrough of `acczed_p20` were repaired and verified, and the
+in-place upgrade was pushed from 3 blockers to 7. Full command-level record: `evidence.log`.
+
+| # | Blocker | State |
+|---|---|---|
+| 1 | `res.country.state.csv` xmlid collision (`state_in_or`/`state_in_od`) | fixed 2026-10-12 |
+| 2 | `ir.model.access`/`ir.rule` merged into `ir.access` | fixed 2026-10-12 |
+| 3 | `KeyError: 'project.task'` in `_recompute_all` | **diagnosed**: `_reflect_relation` → `invalidate_all` → the new `mail.activity.phone` compute (`mail_activity.py:204`) does an unguarded `self.env[model]` for each activity's `res_model`, and `project.task` is not in the registry until 30/42. A 2-line guard carries it past |
+| 4 | 9 of 42 installed modules never load | **fixed**: portal (20) now depends on `base_address_extended`, which was uninstalled; installing it restored 8 of the 9. The 9th, `acczed_theme`, is refused for its 19.0 manifest version |
+| 5 | `null value in column "parent_id" of relation "ir_model_inherit"` | **fixed**: `mail.thread` inherits the new `mail.track.mixin`, which has no `ir.model` row because reflection only runs for modules being upgraded (`loading.py:183`) |
+| 6 | `AssertionError` in `registry.check_indexes` | **fixed**: 19 stored `ir_model_fields.index` as a boolean char; 20 made it a Selection, and custom fields are built from that row (`'true'` → `'btree'`) |
+| 7 | `ParseError: Field "mail_post_method" does not exist in model "ir.cron"` | **open**: a 19.0 field that 20 removed, still referenced by 19-era rows/archs in this DB |
+
+**The control experiment that settles the reading.** A fresh database with `-i mail` on this same
+checkout succeeds (28 modules, exit 0). Every blocker above is an artefact of upgrading the 19 database
+in place — none is a defect of the 20 tree. Reading **C (rebuild on 20)** is therefore not just cheaper:
+it is the only path that is currently *known to work*, and it should carry the two data repairs above
+(`ir_act_client.params_store` hex decode, `res_device_log.user_agent` NULLs) because the same 19 data
+will be moved either way. Reading A now has seven blockers and an unknown tail.
+
+## Round 3, 2026-10-14 — the upgrade COMPLETES
+
+A user-reported "Oops!" on Discuss -> Configuration (screenshot) traced back to `discuss.channel` having
+zero ACLs in `ir_access` **and** mail's entire 20 schema being absent (`discuss_category`,
+`mail_track_mixin`, `mail_activity.phone`, `ir_act_server.log_note_note` all missing). The ACL gap alone
+was 96 models. Fixing ACLs by hand was therefore pointless — mail's upgrade had to finish. It did, after
+three more blockers:
+
+| # | Blocker | Fix |
+|---|---|---|
+| 7 | `Field "mail_post_method" does not exist in model "ir.cron"` importing `mail/views/ir_cron_views.xml` | a 19 field 20 removed, still in view 399's stored arch; blank that arch (mail's XML redefines it later) |
+| 8 | `duplicate key ... discuss_channel_member_partner_unique` in `mail/data/discuss_channel_data.xml:34` | the (channel, partner) pair already existed without the xmlid 20 introduces; adopt it by inserting the `ir_model_data` row (`noupdate=true`) |
+| 9 | `Element '<xpath expr="//div[@name='task_analysis']">' cannot be located in parent view` (`project_project_views.xml:607`, view 608 `project_view_kanban_inherit_project`) | a 19 view **removed in 20**; delete it + its xmlid, then `-u project` → exit 0 |
+
+**Result: 41 of 43 installed modules at 20.x** (only `acczed_theme`, refused for its 19.0 manifest version,
+and `web_unsplash` left at 19.x), `ir_access` 183 → 404 rows, and a Playwright walkthrough where **every
+screen is OK with 0 dialogs** — login, home, Settings, users list, a user record, Discuss, contacts,
+project, command palette, user menu. The apps menu now lists Discuss | To-do | Project | Apps | Settings.
+Crons run and complete; 0 cron failures and 0 schema errors after the restart.
+
+**Nine blockers, and every one was stale 19-era metadata** — two removed fields, two removed views, one
+stale arch, one missing `ir.model` row, one legacy index encoding, one new module dependency, one
+unguarded `self.env[model]`. None required a change to the 20 tree; the single code patch
+(`mail.activity.phone` guard) was a throwaway shim, reverted. This does **not** overturn reading C: the
+copy is now a *migrated* copy, not a *verified* one — ACC-J06 (re-verify B/E/F on 20) and ACC-J08 (the
+three version tags) are still owed, and `acczed_theme` still needs its manifest version bumped (ACC-J05).
+
 ## Done when
 - [x] the copy exists and the upgrade was attempted on it, never on `acczed`
 - [x] **every failure is named with its cause** — the task's real deliverable, given the above

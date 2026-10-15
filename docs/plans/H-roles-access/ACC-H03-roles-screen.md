@@ -16,6 +16,14 @@ Let an admin create and manage roles as first-class objects: name, what it is fo
 
 - Everything the screen needs already exists on `res.groups` (`res_groups.py:16-78`), including `privilege_id` for grouping roles under an app (`res_groups_privilege.py`), `implied_ids` for role inheritance and `disjoint_ids` for mutually exclusive roles.
 - Odoo's own group form (`odoo/addons/base/views/res_groups_views.xml:80`) is developer-facing: users lists, ACL lines, record rules and menu/view access are all dumped on one form.
+- **The role inventory this screen must show, measured in `acczed_p20`:** the `Role / *` base groups
+  (`Role / User` = `base.group_user`, `Role / Administrator`, `Role / Portal`, `Role / Public`,
+  `Role / Everyone`) plus four privileges — `Project` → **`Project / Administrator`** and
+  **`Project / User`** (`project.group_project_manager` / `project.group_project_user`), `Export` →
+  `Allowed`, `Contact` → `Creation`, `Canned Responses` → one group. **`Project / User` is the
+  normal-user role**: it is what grants task create/write (measured: an account holding it can write a
+  task, one without it is read-only), so "a role for normal users" already exists and the screen lists
+  it — a normal participant *on one project* is the `member` grant value in ACC-H01b, not a new group.
 
 ## Steps
 
