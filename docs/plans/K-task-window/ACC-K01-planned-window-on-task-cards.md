@@ -104,10 +104,21 @@ Deadline, and on the to-do card under Deadline.
 - [x] Arabic strings exported and translated (see `i18n/`).
 - [x] Tests green on `acczed_p20`.
 
+## Deployment (2026-10-28)
+
+The LAN box `DESKTOP-V8TPQ3U` now runs **Odoo 20.0 on a restored copy of `acczed_p20`** and serves this
+feature: `http://192.168.1.17:8069/web/login?db=acczed_p20` (the box is on DHCP and moved from `.22`;
+address it as `DESKTOP-V8TPQ3U.local`). The 19 tree and the 19 database are kept as
+`C:\odoo-acczed-19` / `C:\acczed-addons-19` and DB `acczed` — a rollback, not an in-place migration.
+Verified from this machine over HTTP, not from a shell on the box. Details and the four traps
+(BOM in `odoo.conf`, `http_interface` now 127.0.0.1 by default in 20, a stray postmaster blocking the
+service, services holding the code dir) are in `evidence/evidence.log`, and the deploy script now
+takes `ACCZED_HOST` / `ACCZED_BRANCH` / `ACCZED_LAN_DB`.
+
 ## Risks / notes
 
-- **The 19 stack is untouched.** `acczed` (19.0, production parity) and the LAN box still carry
-  the old addons; the user's decision is that the LAN is brought to this code+version later.
+- **The 19 stack is untouched on this machine.** `acczed` (19.0, production parity) still exists here;
+  on the LAN box the 19 tree and DB are kept as the rollback described above.
 - **A brand-new task is In Progress by default** (`state` default). The lock therefore keys on
   state *and* a deadline; a task without a deadline keeps its window editable — and that is
   also the answer for the 71-of-92 tasks that carried no deadline before the demo wipe.
