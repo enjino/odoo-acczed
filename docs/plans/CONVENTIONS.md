@@ -93,7 +93,11 @@ Update the status **in the phase table of `README.md` and in the task header** �
 ## 7. Module conventions (acczed-addons repo)
 
 1. Module names: `acczed_<domain>` (`acczed_theme`, `acczed_sa_payroll`).
-2. Manifest version: `19.0.x.y.z`.
+2. Manifest version: **the Odoo series the module targets** — `20.0.x.y.z` for anything built
+   on the 20 platform, `19.0.x.y.z` for modules that must still load on the 19 production branch.
+   The series is not cosmetic: Odoo refuses a mismatched one outright (`The module X has an
+   incompatible version, setting installable=False`), and a module silently not loading takes its
+   views with it — which is how every task form started answering "Oops!" on 2026-10-27.
 3. Never edit fork files directly — inherit views, extend models.
 4. Every override cites a `file:line` reference in a comment and is re-checked after a fork upgrade.
 5. Every visual change ships with before/after screenshots.

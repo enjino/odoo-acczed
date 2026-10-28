@@ -96,6 +96,7 @@ the 2026-09-15 build is removed and phase C restarts from ACC-C01 when it resume
 | **H** | [H-roles-access/](H-roles-access/) | Roles & access console — admin-created roles, then per-role access to actions (menus, window/server actions), models and view features, with an audit trail. | a user without a role is refused server-side; a role can be created, granted and revoked without developer mode | ⏳ |
 | **I** | [I-ui-shell/](I-ui-shell/) | UI shell redesign — persistent Figma/Notion-style side navigation, our own shell and view renderers, an interface no other Odoo has. | design approved from mockups; every app installs and renders through the new UI or falls back explicitly (never silently) | 🚧 |
 | **J** | [J-platform-20/](J-platform-20/) | Platform move: Odoo 19.0 → 20.0 — fetch upstream 20.0, replay our delta on a `20.0` branch, migrate the database, re-prove B/E/F on 20, align the three version layers. | branch `20.0` runs, a migrated copy of `acczed` is green, B/E/F re-proved on 20, and the fork tag + manifest + docs all say 20.0 | 🚧 |
+| **K** | [K-task-window/](K-task-window/) | Planned task window — a planned start and end on the project task card and the to-do card, with the deadline as the end in force while the task is In Progress. | both cards show the window; In Progress + a deadline ⇒ the deadline is the end in force, the planned end is locked and never overwritten; `end < start` refused | ✅ done |
 
 Execution order: A → B → **E** → C → **I** → D → F (E before C because an Arabic tour of a theme is
 cheaper than a theme tour twice; **I before C's remaining waves and before D** because the shell decides
@@ -284,6 +285,15 @@ phase-I design decision goes back to ACC-I04 rather than into a silent edit.
 
 
 ---
+
+### Phase K — Planned task window
+
+| Task | Title | Depends on | Est. | Status |
+|---|---|---|---|---|
+| [ACC-K01](K-task-window/ACC-K01-planned-window-on-task-cards.md) | A planned window (start → end) on the task and to-do cards | ACC-J04 | 3 h | ✅ |
+
+Platform note (2026-10-27): phase K is written **for the 20 stack** (`acczed_p20`). Bringing the LAN box
+to this code and version is the user's later decision, not part of K01.
 
 ## Baseline facts (verified 2026-09-14)
 
